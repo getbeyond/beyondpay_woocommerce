@@ -358,7 +358,7 @@ function beyond_pay_init_gateway_class() {
 
 	    $order = wc_get_order($order_id);
 
-	    $amountInCents = $order->get_total() / 0.01;
+	    $amountInCents = round($order->get_total()  * 100);
 
 	    $request = new BeyondPayRequest();
 	    $request->RequestType = "004";
@@ -378,7 +378,7 @@ function beyond_pay_init_gateway_class() {
 		$localTaxIndicator = 'N';
 		$tax = $order->get_total_tax();
 		if(!empty($tax)) {
-		    $request->requestMessage->TaxAmount = $tax;
+		    $request->requestMessage->TaxAmount = round($tax*100);
 		    $localTaxIndicator = 'P';
 		}
 		$request->requestMessage->LocalTaxIndicator = $localTaxIndicator;
@@ -395,10 +395,10 @@ function beyond_pay_init_gateway_class() {
 		    $itemParsed->ItemDescription = substr($i->get_name(),0,35);
 		    $itemParsed->ItemQuantity = $i->get_quantity();
 		    $itemParsed->ItemUnitMeasure = "EA";
-		    $itemParsed->ItemUnitCostAmt = floatval($product->get_price())*100;
-		    $itemParsed->ItemTotalAmount = $order->get_line_total($i, true)*100;
+		    $itemParsed->ItemUnitCostAmt = round(floatval($product->get_price())  * 100);
+		    $itemParsed->ItemTotalAmount = round($order->get_line_total($i, true)  * 100);
 		    if(!empty($i->get_total_tax())){
-			$itemParsed->ItemTaxAmount = $i->get_total_tax()*100;
+			$itemParsed->ItemTaxAmount = round($order->get_line_tax($i) * 100);
 			$itemParsed->ItemTaxIndicator = 'P';
 		    } else {
 			$itemParsed->ItemTaxIndicator = 'N';
