@@ -22,7 +22,7 @@ window.TokenPay = function(publicKey) {
               errorMessage.textContent = event.data.data.errorMessage;
               errorMessage.style.display = "block";
 			  if (onFailure) {
-                (event.data.data);
+                onFailure(event.data.data);
               }
             } else {
               errorMessage.style.display = "none";
