@@ -4,7 +4,7 @@
  * Description: Accept credit cards on your WooCommerce store with Beyond.
  * Author: Beyond
  * Author URI: https://getbeyond.com
- * Version: 1.1.0
+ * Version: 1.1.1
  * Text Domain: beyond_pay-for-woocommerce
  *
  * Tested up to: 5.4.2
