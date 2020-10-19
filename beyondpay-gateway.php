@@ -4,7 +4,7 @@
  * Description: Accept credit cards on your WooCommerce store with Beyond.
  * Author: Beyond
  * Author URI: https://getbeyond.com
- * Version: 1.0.4
+ * Version: 1.1.1
  * Text Domain: beyond_pay-for-woocommerce
  *
  * Tested up to: 5.4.2
@@ -136,6 +136,10 @@ function beyond_pay_init_gateway_class() {
 	    $this->merchant_code = $this->get_option('merchant_code');
 	    $this->merchant_account_code = $this->get_option('merchant_account_code');
 
+	    $additional_data = $this->get_option('additional_data','off');
+	    $this->use_level_2_data = $additional_data !== 'off';
+	    $this->use_level_3_data = $additional_data == 'level3';
+
 	    add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 	    add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
 	}
@@ -245,6 +249,18 @@ function beyond_pay_init_gateway_class() {
 		    . 'authorization will only authorize when order is placed and capture'
 		    . ' once order status changes to completed.',
 		),
+		'additional_data' => array(
+		    'title' => 'Level II/III Data',
+		    'type' => 'select',
+		    'options' => [
+			'off' => 'Do not send additional data',
+			'level2' => 'Send Level II Data',
+			'level3' => 'Send Level II and Level III Data'
+		    ],
+		    'description' => 'Some business cards may be eligible for '
+		    . 'lower interchange rates if you send additional data with'
+		    . ' the transaction.',
+		),
 		'merchant_code' => array(
 		    'title' => 'Merchant Code',
 		    'type' => 'text'
@@ -342,7 +358,7 @@ function beyond_pay_init_gateway_class() {
 
 	    $order = wc_get_order($order_id);
 
-	    $amountInCents = $order->get_total() / 0.01;
+	    $amountInCents = round($order->get_total()  * 100);
 
 	    $request = new BeyondPayRequest();
 	    $request->RequestType = "004";
@@ -357,6 +373,40 @@ function beyond_pay_init_gateway_class() {
 	    $request->requestMessage->AcctType = "R";
 	    $request->requestMessage->Amount = $amountInCents;
 	    $request->requestMessage->HolderType = "O";
+	    if($this->use_level_2_data){
+		$request->requestMessage->PONum = $order_id;
+		$localTaxIndicator = 'N';
+		$tax = $order->get_total_tax();
+		if(!empty($tax)) {
+		    $request->requestMessage->TaxAmount = round($tax*100);
+		    $localTaxIndicator = 'P';
+		}
+		$request->requestMessage->LocalTaxIndicator = $localTaxIndicator;
+	    }
+	    if($this->use_level_3_data){
+		$request->requestMessage->ItemCount = $order->get_item_count();
+		$items = $order->get_items();
+		$itemsParsed = [];
+		foreach ($items as $i) {
+		    $product = $i->get_product();
+		    $itemParsed = new Item();
+		    $itemParsed->ItemCode = $product->get_id();
+		    $itemParsed->ItemCommodityCode = "1234";
+		    $itemParsed->ItemDescription = substr($i->get_name(),0,35);
+		    $itemParsed->ItemQuantity = $i->get_quantity();
+		    $itemParsed->ItemUnitMeasure = "EA";
+		    $itemParsed->ItemUnitCostAmt = round(floatval($product->get_price())  * 100);
+		    $itemParsed->ItemTotalAmount = round($order->get_line_total($i, true)  * 100);
+		    if(!empty($i->get_total_tax())){
+			$itemParsed->ItemTaxAmount = round($order->get_line_tax($i) * 100);
+			$itemParsed->ItemTaxIndicator = 'P';
+		    } else {
+			$itemParsed->ItemTaxIndicator = 'N';
+		    }
+		    array_push($itemsParsed, $itemParsed);
+		}
+		$request->requestMessage->Item = $itemsParsed;
+	    }
 	    $conn = new BeyondPayConnection();
 	    $response = $conn->processRequest($this->api_url, $request);
 
