@@ -4,7 +4,7 @@
  * Description: Accept credit cards on your WooCommerce store with Beyond.
  * Author: Beyond
  * Author URI: https://getbeyond.com
- * Version: 1.1.1
+ * Version: 1.2.0
  * Text Domain: beyond_pay-for-woocommerce
  *
  * Tested up to: 5.4.2
@@ -26,7 +26,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once( dirname(__FILE__) . '/BeyondPay.php' );
+/** Check if the class wasn't loaded by a different plugin */
+if(!class_exists('BeyondPayRequest')) {
+    require_once( dirname(__FILE__) . '/BeyondPay.php' );
+}
 
 /*
  * This action hook registers our PHP class as a WooCommerce payment gateway
@@ -101,7 +104,7 @@ function beyond_pay_init_gateway_class() {
 	    $this->icon = ''; // URL of the icon that will be displayed on checkout page near your gateway name
 	    $this->has_fields = true;
 	    $this->method_title = 'Beyond Pay Gateway';
-	    $this->method_description = 'Description of Beyond Pay Gateway'; // will be displayed on the options page
+	    $this->method_description = 'Securely accept credit card payments using Beyond Pay gateway and optimize your B2B interchange with support for Level III processing.'; // will be displayed on the options page
 	    // TODO: add subscriptions, refunds, saved payment methods,
 	    $this->supports = array(
 		'products'
@@ -189,7 +192,7 @@ function beyond_pay_init_gateway_class() {
 		    'title' => 'Description',
 		    'type' => 'textarea',
 		    'description' => 'This controls the description which the user sees during checkout.',
-		    'default' => 'Pay with your credit card via our super-cool payment gateway.',
+		    'default' => 'Pay with your credit or debit card.',
 		),
 		'custom_error_message' => array(
 		    'title' => 'Detailed Error Messages',
@@ -202,9 +205,11 @@ function beyond_pay_init_gateway_class() {
 		    'title' => 'Test mode',
 		    'label' => 'Enable Test Mode',
 		    'type' => 'checkbox',
-		    'description' => 'Place the payment gateway in test mode using test API keys.',
-		    'default' => 'yes',
-		    'desc_tip' => true,
+		    'description' => 'Test API Keys may be obtained from '
+		    . '<a target="_blank" href="https://developer.getbeyond.com">'
+		    . 'developer.getbeyond.com'
+		    . '</a>',
+		    'default' => 'yes'
 		),
 		'test_public_key' => array(
 		    'title' => 'Test Public Key',
@@ -215,7 +220,7 @@ function beyond_pay_init_gateway_class() {
 		    'type' => 'password',
 		),
 		'test_login' => array(
-		    'title' => 'Test Login',
+		    'title' => 'Test Username',
 		    'type' => 'text'
 		),
 		'test_password' => array(
@@ -231,12 +236,20 @@ function beyond_pay_init_gateway_class() {
 		    'type' => 'password'
 		),
 		'login' => array(
-		    'title' => 'Live Login',
+		    'title' => 'Live Username',
 		    'type' => 'text'
 		),
 		'password' => array(
 		    'title' => 'Live Password',
 		    'type' => 'password',
+		),
+		'merchant_code' => array(
+		    'title' => 'Merchant Code',
+		    'type' => 'text'
+		),
+		'merchant_account_code' => array(
+		    'title' => 'Merchant Account Code',
+		    'type' => 'text'
 		),
 		'transaction_mode' => array(
 		    'title' => 'Transaction Mode',
@@ -257,17 +270,12 @@ function beyond_pay_init_gateway_class() {
 			'level2' => 'Send Level II Data',
 			'level3' => 'Send Level II and Level III Data'
 		    ],
-		    'description' => 'Some business cards may be eligible for '
-		    . 'lower interchange rates if you send additional data with'
-		    . ' the transaction.',
-		),
-		'merchant_code' => array(
-		    'title' => 'Merchant Code',
-		    'type' => 'text'
-		),
-		'merchant_account_code' => array(
-		    'title' => 'Merchant Account Code',
-		    'type' => 'text'
+		    'description' => 'Select the level of transaction data to '
+		    . 'be automatically sent. Level II includes reference '
+		    . 'number and tax amount, while Level III includes '
+		    . 'line-item details. Set to Level III to ensure you always '
+		    . 'qualify for the best rates on eligible corporate '
+		    . 'purchasing cards.',
 		)
 	    );
 	}
@@ -373,6 +381,35 @@ function beyond_pay_init_gateway_class() {
 	    $request->requestMessage->AcctType = "R";
 	    $request->requestMessage->Amount = $amountInCents;
 	    $request->requestMessage->HolderType = "O";
+	    
+	    $address = $order->get_address('billing');
+	    if(!empty($address)){
+		$name = trim($address['first_name'].' '.$address['last_name']);
+		$request->requestMessage->AccountHolderName = $name;
+		$request->requestMessage->AccountStreet = trim($address['address_1']);
+		if(!empty($address['phone'])){
+		    $address['phone'] = str_replace([' ','-','#','+'], '', $address['phone']);
+		    while(strlen($address['phone']) < 10){
+			$address['phone'] = '0'.$address['phone'];
+		    }
+		    if(strlen($address['phone']) < 12){
+			$request->requestMessage->AccountPhone = trim($address['phone']);
+		    }
+		}
+		if(!empty($address['postcode'])){
+		    $postcode = str_replace('-', '', $address['postcode']);
+		    if(is_numeric($postcode) && strlen($postcode) === 5) {
+			$request->requestMessage->AccountZip = $postcode;
+		    }
+		}
+	    }
+	    
+	    $customer_id = $order->get_user_id();
+	    if(!empty($customer_id)){
+		$request->requestMessage->CustomerAccountCode = $customer_id;
+	    }
+	    
+	    $request->requestMessage->InvoiceNum = $order_id;
 	    if($this->use_level_2_data){
 		$request->requestMessage->PONum = $order_id;
 		$localTaxIndicator = 'N';

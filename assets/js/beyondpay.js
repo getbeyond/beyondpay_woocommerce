@@ -5,8 +5,8 @@
  */
 function attachBeyondPay(tokenpay){
   tokenpay.initialize({
-    dataElement: '#card', 
-    errorElement: '#errorMessage', 
+    dataElement: '#card',
+    errorElement: '#errorMessage',
     useStyles: false
   });
 }

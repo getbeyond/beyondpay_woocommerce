@@ -91,6 +91,8 @@ window.TokenPay = function(publicKey) {
         if (config.useACH) {
           payFrame.useACH = config.useACH;
         }
+        
+        payFrame.disableZip = true;
 
         dataElement.innerHTML = "";
         iframe = _createIframe();
