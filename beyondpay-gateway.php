@@ -4,11 +4,12 @@
  * Description: Accept credit cards on your WooCommerce store with Beyond.
  * Author: Beyond
  * Author URI: https://getbeyond.com
- * Version: 1.2.0
+ * Plugin URI: https://developer.getbeyond.com
+ * Version: 1.3.0
  * Text Domain: beyond_pay-for-woocommerce
  *
- * Tested up to: 5.4.2
- * WC tested up to: 4.2.2
+ * Tested up to: 5.5.3
+ * WC tested up to: 4.6.1
  *
  * Copyright (c) 2020 Above and Beyond Business Tools and Services for Entrepreneurs, Inc.
  *
@@ -65,7 +66,7 @@ function beyond_pay_order_update($order_id){
 	$request->Password = $beyond_pay_gateway->password;
 
 	$request->requestMessage = new RequestMessage();
-	$request->requestMessage->SoftwareVendor = 'WooCommerce BeyondPay Plugin';
+	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
 	$request->requestMessage->TransactionType = 'capture';
 	$request->requestMessage->Amount = $order->get_total() / 0.01;
 	$request->requestMessage->MerchantCode = $beyond_pay_gateway->merchant_code;
@@ -161,12 +162,21 @@ function beyond_pay_init_gateway_class() {
 	    trs.has("#woocommerce_beyondpay_"+f)[liveAction]();
 	});
     }
+    function onBeyondPayUseCustomStylingChanged(useCustomStyling) {
+	jQuery('tr').has('#woocommerce_beyondpay_styling')[useCustomStyling ? 'show' : 'hide']();
+    }
     var testModeCheckbox = document.getElementById('woocommerce_beyondpay_testmode');
+    var customStylingCheckbox = document.getElementById('woocommerce_beyondpay_use_custom_styling');
     testModeCheckbox.addEventListener(
       'change',
       function(e){onBeyondPayTestModeChanged(e.target.checked);}
     );
+    customStylingCheckbox.addEventListener(
+      'change',
+      function(e){onBeyondPayUseCustomStylingChanged(e.target.checked);}
+    );
     onBeyondPayTestModeChanged(testModeCheckbox.checked);
+    onBeyondPayUseCustomStylingChanged(customStylingCheckbox.checked);
 </script>
 <?php
 	}
@@ -276,7 +286,22 @@ function beyond_pay_init_gateway_class() {
 		    . 'line-item details. Set to Level III to ensure you always '
 		    . 'qualify for the best rates on eligible corporate '
 		    . 'purchasing cards.',
-		)
+		),
+		'use_custom_styling' => array(
+		    'title' => 'Advanced Styling',
+		    'type' => 'checkbox',
+		    'label' => 'Enable to apply custom css rules to the '
+			. 'payment fields.'
+		    . '</a>',
+		    'default' => 'no'
+		),
+		'styling' => array(
+		    'title' => 'Payment Fields styling',
+		    'type' => 'textarea',
+		    'description' => 'You can set the CSS rules here which will '
+		    . 'apply to the payment fields.',
+		    'default' => file_get_contents(__DIR__.'/assets/css/payment-styling.css')
+		),
 	    );
 	}
 
@@ -287,6 +312,9 @@ function beyond_pay_init_gateway_class() {
 		}
 		echo wpautop(wp_kses_post(trim($this->description)));
 	    }
+	    $css = $this->get_option('use_custom_styling') === 'yes' ?
+		    $this->get_option('styling'):
+		    file_get_contents(__DIR__.'/assets/css/payment-styling.css');
 ?>
 <fieldset id="wc-beyond_pay-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">
 
@@ -294,18 +322,9 @@ function beyond_pay_init_gateway_class() {
 
     <div id="card"></div>
     <div id="errorMessage"></div>
-    <div style="display: none" id="customStyles"> 
-    body {
-    margin: 8px 0;
-    }
-    #payment-form {
-    border: 2px solid #003b5c; 
-    padding: 5px 10px; 
-    border-radius: 5px; 
-    background: white;
-    color: #333;
-    }
-    </div>
+    <?php if(!empty($css)) { ?>
+    <div style="display: none" id="customStyles"><?php echo $css ?></div>
+    <?php } ?>
     <div class="clear"></div>
 
     <input type="hidden" value="" id="beyond_pay_token" name="beyond_pay_token" />
