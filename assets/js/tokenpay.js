@@ -84,7 +84,7 @@ window.TokenPay = function(publicKey) {
           console.warn('TokenPay: can\'t find element by selector: ' + config.errorElement);
         }
 
-        if (config.useStyles) {
+        if (document.getElementById("customStyles")) {
            payFrame.customStyles = document.getElementById("customStyles").textContent;
         }
 
