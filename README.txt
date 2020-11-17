@@ -1,7 +1,18 @@
+=== Beyond Pay for WooCommerce ===
+Contributors: beyondpay
+Tags: credit card, payment, woocommerce, payment gateway
+Requires at least: 4.7
+Tested up to: 5.5
+Stable tag: trunk
+Requires PHP: 7.0
+License: MIT
+License URI: https://opensource.org/licenses/MIT
+
+Securely accept credit card payments using Beyond Pay gateway and optimize your cost of acceptance on B2B/corporate cards.
+
+== Description ==
 # Beyond Pay Gateway for WooCommerce
 Securely accept credit cards directly on your [WooCommerce](https://woocommerce.com) store using [Beyond](https://getbeyond.com) with this [WordPress](https://wordpress.org/) plugin.
-
-*Tested up to: WordPress 5.5.3 and WooCommerce 4.6.1*
 
 ## Features
 - Accept Visa, MasterCard, American Express, Discover, JCB, and Diners Club brand cards directly on your website
@@ -48,26 +59,58 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
 
-## Frequently Asked Questions
+== Frequently Asked Questions ==
 
-**Is it secure and/or compliant to accept credit cards directly on my website?**
+= Is it secure and/or compliant to accept credit cards directly on my website? =
 
 Yes! Beyond Pay Gateway secures card data by hosting the actual payment fields and presenting them in an iframe so that the fields only *appear* to be part of the WooCommerce checkout form. 
 
 Once card data is collected, then the information is further secured by *tokenization*: a process in which the sensitive card data is exchanged for a non-sensitive representation, or "token." This ensures that cardholder data is not sent from the consumer's browser to the merchant's web server, and only the surrogate token value comes into contact with the merchant's systems.
 
-**Do I have to have an SSL/TLS certificate?**
+= Do I have to have an SSL/TLS certificate? =
 
 Yes. All submission of sensitive payment data by the Beyond Pay is made via a secure HTTPS connection from the cardholder's browser. However, to protect yourself from man-in-the-middle attacks and to prevent your users from experiencing mixed content warnings in their browser, you MUST serve the page with your payment form over HTTPS.
 
-**Does this gateway plugin support a sandbox or test option?**
+= Does this gateway plugin support a sandbox or test option? =
 
 Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/Pages/ResponsePage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1URUJXWFhEMDlDTUs3OVlROEMxOExJQzZGNSQlQCN0PWcu) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
 
-**Does this gateway plugin support WooCommerce Subscriptions?**
+= Does this gateway plugin support WooCommerce Subscriptions? =
 
 Not yet, but this feature is coming soon!
 
-**How can I get further support?**
+= How can I get further support? =
 
 Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com) or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues).
+
+== Screenshots ==
+
+1. WooCommerce Checkout page with Beyond Pay enabled as the payment method (in test mode) and default form styling
+2. Beyond Pay for WooCommerce configuration settings
+3. Additional configuration settings for Beyond Pay plugin
+
+== Changelog ==
+
+= 1.3.0 =
+* Added advanced CSS styling options for iframe.
+* Updated default payment form styling.
+
+= 1.2.0 =
+* Enhanced mapping of data elements from WooCommerce to Beyond Pay.
+
+= 1.1.1 =
+* Added automatic defaulting of Level II/III data elements as a configuration option.
+* Corrected validation issue after token generation.
+
+= 1.1.0 =
+* Added support for Level II and Level III data elements.
+
+= 1.0.4 =
+* Included the /vendor directory within the plugin itself.
+* Added enhanced error messaging if WooCommerce is not installed.
+
+= 1.0.3 =
+* Minor bug fixes.
+
+= 1.0.2 =
+* Added support for both Sale and Authorization transaction modes.
