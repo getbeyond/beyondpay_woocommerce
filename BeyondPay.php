@@ -1,6 +1,6 @@
 <?php
-
-require 'vendor/autoload.php';
+namespace BeyondPay;
+use Exception, SimpleXMLElement, DateTime, Throwable;
 
 class BeyondPayRequest {
   
@@ -719,6 +719,12 @@ class BeyondPayConnection {
     
     const skipField = "BeyondPayResponseType";
 
+    /**
+     * @param string $beyondPayURL
+     * @param BeyondPayRequest $request
+     * @return BeyondPayResponse
+     * @throws BeyondPaySDKException@
+     */
     public function processRequest(string $beyondPayURL, BeyondPayRequest $request){
         
         $response = new BeyondPayResponse();
@@ -830,11 +836,12 @@ class BeyondPayConnection {
                 return;
             }
             
-            if (!class_exists($className)) {
+	    $nsClassName = 'BeyondPay\\'.$className;
+            if (!class_exists($nsClassName)) {
                 return;
             }
             
-            $result = new $className;
+            $result = new $nsClassName;
             
             $xmlDoc = simplexml_load_string($stringXML);
             
@@ -997,16 +1004,18 @@ class BeyondPayConnection {
             
             if ($node->count() > 0){
                 //the node is an Object 
-                if (!class_exists($field)) {
+		$nsField = 'BeyondPay\\'.$field;
+                if (!class_exists($nsField)) {
                     continue;
                 }
                 
                 if ($isList) {
-                    $listElement = new $field;
+		    
+                    $listElement = new $nsField;
                     $object->{$field}[] = $listElement;
                     self::DeserializeXMLToObject($node, $listElement);
                 } else{
-                    $object->{$field} = new $field;
+                    $object->{$field} = new $nsField;
                     self::DeserializeXMLToObject($node, $object->{$field});
                 }
                 
@@ -1058,15 +1067,17 @@ class SOAPMessenger {
             
             $requestBody = Constanst::SOAP_REQUEST_HEADER . $message_encode . Constanst::SOAP_REQUEST_FOOTER;
             
-            $client = new GuzzleHttp\Client();
-            $res = $client->post($paymentGatewayUrl, [
-                'headers' => $headers,
-                'body' => $requestBody
-            ]);
+            $res = wp_remote_post(
+		$paymentGatewayUrl, 
+		[
+		    'headers' => $headers,
+		    'body' => $requestBody
+		]
+	    );
             
-            if ($res->getStatusCode() == 200) {
+            if ($res['response']['code'] == 200) {
                               
-                $responseDoc = simplexml_load_string($res->getBody());
+                $responseDoc = simplexml_load_string($res['body']);
                 $bodyNode = $responseDoc->xpath('//s:Body');
                 
                 if (empty($bodyNode[0]) || empty($bodyNode[0]->ProcessRequestResponse) || empty($bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult)) {

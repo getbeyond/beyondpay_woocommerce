@@ -5,8 +5,8 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.3.0
- * Text Domain: beyond_pay-for-woocommerce
+ * Version: 1.3.1
+ * Text Domain: beyond-pay-for-woocommerce
  *
  * Tested up to: 5.5.3
  * WC tested up to: 4.6.1
@@ -28,8 +28,8 @@
  */
 
 /** Check if the class wasn't loaded by a different plugin */
-if(!class_exists('BeyondPayRequest')) {
-    require_once( dirname(__FILE__) . '/BeyondPay.php' );
+if(!class_exists('BeyondPay\\BeyondPayRequest')) {
+    require( dirname(__FILE__) . '/BeyondPay.php' );
 }
 
 /*
@@ -58,14 +58,14 @@ function beyond_pay_order_update($order_id){
 	
 	$beyond_pay_gateway = wc_get_payment_gateway_by_order($order);
 	
-	$request = new BeyondPayRequest();
+	$request = new BeyondPay\BeyondPayRequest();
 	$request->RequestType = "019";
 	$request->TransactionID = time();
 
 	$request->User = $beyond_pay_gateway->login;
 	$request->Password = $beyond_pay_gateway->password;
 
-	$request->requestMessage = new RequestMessage();
+	$request->requestMessage = new BeyondPay\RequestMessage();
 	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
 	$request->requestMessage->TransactionType = 'capture';
 	$request->requestMessage->Amount = $order->get_total() / 0.01;
@@ -73,7 +73,7 @@ function beyond_pay_order_update($order_id){
 	$request->requestMessage->MerchantAccountCode = $beyond_pay_gateway->merchant_account_code;
 	$request->requestMessage->ReferenceNumber = $order->get_transaction_id();
 
-	$conn = new BeyondPayConnection();
+	$conn = new BeyondPay\BeyondPayConnection();
 	$response = $conn->processRequest($beyond_pay_gateway->api_url, $request);
 	if ($response->ResponseCode == '00000') {
 	    $order->update_meta_data('_beyond_pay_processed', 1);
@@ -81,7 +81,7 @@ function beyond_pay_order_update($order_id){
 	    $order->add_order_note('Payment for this order was captured.');
 	} else {
 	    wc_add_notice('Error capturing payment with Beyond Pay', 'error');
-	    $order->add_order_note('Beyond Pay Capture Response: '.htmlentities(BeyondPayConnection::Serialize($response)));
+	    $order->add_order_note('Beyond Pay Capture Response: '.htmlentities(BeyondPay\BeyondPayConnection::Serialize($response)));
 	}
     }
 }
@@ -150,35 +150,7 @@ function beyond_pay_init_gateway_class() {
 	
 	function admin_options() {
 	    parent::admin_options();
-?>
-<script type="text/javascript">
-    function onBeyondPayTestModeChanged(isTestMode) {
-	var fields = ["public_key","private_key","login","password"];
-	var trs = jQuery("tr");
-	var testAction = isTestMode ? 'show' : 'hide';
-	var liveAction = isTestMode ? 'hide' : 'show';
-	fields.forEach(function(f){
-	    trs.has("#woocommerce_beyondpay_test_"+f)[testAction]();
-	    trs.has("#woocommerce_beyondpay_"+f)[liveAction]();
-	});
-    }
-    function onBeyondPayUseCustomStylingChanged(useCustomStyling) {
-	jQuery('tr').has('#woocommerce_beyondpay_styling')[useCustomStyling ? 'show' : 'hide']();
-    }
-    var testModeCheckbox = document.getElementById('woocommerce_beyondpay_testmode');
-    var customStylingCheckbox = document.getElementById('woocommerce_beyondpay_use_custom_styling');
-    testModeCheckbox.addEventListener(
-      'change',
-      function(e){onBeyondPayTestModeChanged(e.target.checked);}
-    );
-    customStylingCheckbox.addEventListener(
-      'change',
-      function(e){onBeyondPayUseCustomStylingChanged(e.target.checked);}
-    );
-    onBeyondPayTestModeChanged(testModeCheckbox.checked);
-    onBeyondPayUseCustomStylingChanged(customStylingCheckbox.checked);
-</script>
-<?php
+	    wp_enqueue_script('beyondpay_admin_options', plugins_url('assets/js/beyondpay-admin-options.js', __FILE__));
 	}
 
 	public function init_form_fields() {
@@ -376,6 +348,10 @@ function beyond_pay_init_gateway_class() {
 		wc_add_notice('First name is required!', 'error');
 		return false;
 	    }
+	    if (empty($_POST['beyond_pay_token'])) {
+		wc_add_notice('Failed to process payment data.', 'error');
+		return false;
+	    }
 	    return true;
 	}
 
@@ -387,14 +363,14 @@ function beyond_pay_init_gateway_class() {
 
 	    $amountInCents = round($order->get_total()  * 100);
 
-	    $request = new BeyondPayRequest();
+	    $request = new BeyondPay\BeyondPayRequest();
 	    $request->RequestType = "004";
 	    $request->TransactionID = time();
 
 	    $request->PrivateKey = $this->private_key;
-	    $request->AuthenticationTokenId = $_POST['beyond_pay_token'];
+	    $request->AuthenticationTokenId = sanitize_key($_POST['beyond_pay_token']);
 
-	    $request->requestMessage = new RequestMessage();
+	    $request->requestMessage = new BeyondPay\RequestMessage();
 	    $request->requestMessage->TransIndustryType = "EC";
 	    $request->requestMessage->TransactionType = $this->transaction_mode;
 	    $request->requestMessage->AcctType = "R";
@@ -445,7 +421,7 @@ function beyond_pay_init_gateway_class() {
 		$itemsParsed = [];
 		foreach ($items as $i) {
 		    $product = $i->get_product();
-		    $itemParsed = new Item();
+		    $itemParsed = new BeyondPay\Item();
 		    $itemParsed->ItemCode = $product->get_id();
 		    $itemParsed->ItemCommodityCode = "1234";
 		    $itemParsed->ItemDescription = substr($i->get_name(),0,35);
@@ -463,7 +439,7 @@ function beyond_pay_init_gateway_class() {
 		}
 		$request->requestMessage->Item = $itemsParsed;
 	    }
-	    $conn = new BeyondPayConnection();
+	    $conn = new BeyondPay\BeyondPayConnection();
 	    $response = $conn->processRequest($this->api_url, $request);
 
 	    if ($response->ResponseCode == '00000') {
@@ -475,7 +451,7 @@ function beyond_pay_init_gateway_class() {
 		    $order->add_meta_data('_beyond_pay_processed', 1);
 		}
 		$order->payment_complete($response->responseMessage->GatewayTransID);
-		$order->reduce_order_stock();
+		wc_reduce_stock_levels($order);
 		$order->add_order_note('Thank you for your payment!', true);
 		$woocommerce->cart->empty_cart();
 		return array(
