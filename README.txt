@@ -21,28 +21,28 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 - Simplifies merchant PCI compliance obligations to the shorter [Self-Assessment Questionnaire "A" (SAQ-A)](https://www.pcisecuritystandards.org/pci_security/completing_self_assessment)
 - Support either pre-authorization and later capture when WooCommerce order status changes, or authorization and capture at once (the combined "sale" transaction type)
 - Optimize B2B card acceptance costs by automatically sending additional transaction data elements (also known as ["Level II" and "Level III" information](https://www.getbeyond.com/b2b-payments/)
-- Custom CSS styling support for the hosted payment fields so that you can create your ideal checkout experience
+- Custom CSS styling support for the hosted payment fields so you can create your ideal checkout experience
 - Customizable gateway response and error messaging
 - Test/sandbox mode for development and staging
 
 ## Installation
 
 1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
-1. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
-1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
-1. Click the **Upload Plugin** button at the top of the screen.
-1. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
-1. Click **Install Now**.
-1. When the installation is complete you will see the message "Plugin installed successfully."
-1. Click the **Activate Plugin** button at the bottom of the page.
+2. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
+3. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
+4. Click the **Upload Plugin** button at the top of the screen.
+5. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
+6. Click **Install Now**.
+7. When the installation is complete you will see the message "Plugin installed successfully."
+8. Click the **Activate Plugin** button at the bottom of the page.
     - *For more information on managing WordPress plugins, see https://wordpress.org/support/article/managing-plugins/*
 
 ## Configuration
 
 1. From your WordPress **/wp-admin** page, navigate to **WooCommerce > Settings**.
-1. Select the **Payments** tab at the top of the screen.
-1. Click the **Manage** button for the Beyond Pay Gateway payment method.
-1. Proceed to configure payment method options available on this page:
+2. Select the **Payments** tab at the top of the screen.
+3. Click the **Manage** button for the Beyond Pay Gateway payment method.
+4. Proceed to configure payment method options available on this page:
   - **Enable/Disable** - toggle to control whether this payment method is enabled or disabled
   - **Title** - this controls how this payment method is listed to the consumer during checkout; defaults to "Credit/Debit Card"
   - **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
@@ -90,6 +90,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 3. Additional configuration settings for Beyond Pay plugin
 
 == Changelog ==
+
+= 1.3.1 =
+* Namespace updates, library changes, and general cleanup.
 
 = 1.3.0 =
 * Added advanced CSS styling options for iframe.
