@@ -91,6 +91,12 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
+= 1.4.0 =
+* Subscription support added
+
+= 1.3.1 =
+* Library naming updates
+
 = 1.3.0 =
 * Added advanced CSS styling options for iframe.
 * Updated default payment form styling.

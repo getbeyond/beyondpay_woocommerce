@@ -5,11 +5,11 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.3.1
+ * Version: 1.4.0
  * Text Domain: beyond-pay-for-woocommerce
  *
- * Tested up to: 5.5.3
- * WC tested up to: 4.6.1
+ * Tested up to: 5.6.0
+ * WC tested up to: 4.8.0
  *
  * Copyright (c) 2020 Above and Beyond Business Tools and Services for Entrepreneurs, Inc.
  *
@@ -57,32 +57,7 @@ function beyond_pay_order_update($order_id) {
     ) {
 
 	$beyond_pay_gateway = wc_get_payment_gateway_by_order($order);
-
-	$request = new BeyondPay\BeyondPayRequest();
-	$request->RequestType = "019";
-	$request->TransactionID = time();
-
-	$request->User = $beyond_pay_gateway->login;
-	$request->Password = $beyond_pay_gateway->password;
-
-	$request->requestMessage = new BeyondPay\RequestMessage();
-	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
-	$request->requestMessage->TransactionType = 'capture';
-	$request->requestMessage->Amount = round($order->get_total() * 100);
-	$request->requestMessage->MerchantCode = $beyond_pay_gateway->merchant_code;
-	$request->requestMessage->MerchantAccountCode = $beyond_pay_gateway->merchant_account_code;
-	$request->requestMessage->ReferenceNumber = $order->get_transaction_id();
-
-	$conn = new BeyondPay\BeyondPayConnection();
-	$response = $conn->processRequest($beyond_pay_gateway->api_url, $request);
-	if ($response->ResponseCode == '00000') {
-	    $order->update_meta_data('_beyond_pay_processed', 1);
-	    $order->save_meta_data();
-	    $order->add_order_note('Payment for this order was captured.');
-	} else {
-	    wc_add_notice('Error capturing payment with Beyond Pay', 'error');
-	    $order->add_order_note('Beyond Pay Capture Response: ' . htmlentities(BeyondPay\BeyondPayConnection::Serialize($response)));
-	}
+	$beyond_pay_gateway->capture_authorised_payment($order);
     }
 }
 
@@ -94,4 +69,11 @@ function beyond_pay_init_gateway_class() {
 	return;
     }
     require_once dirname(__FILE__) . '/includes/wc-beyond-pay-gateway.php';
+}
+
+add_action('woocommerce_scheduled_subscription_payment_beyondpay', 'beyond_pay_process_sub_payment', 10, 2 );
+
+function beyond_pay_process_sub_payment( $amount_to_charge, $order ) {
+    $beyond_pay_gateway = wc_get_payment_gateway_by_order($order);
+    $beyond_pay_gateway->process_subscription_payment( $amount_to_charge, $order );
 }

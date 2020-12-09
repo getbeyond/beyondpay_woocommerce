@@ -1075,8 +1075,7 @@ class SOAPMessenger {
 		]
 	    );
             
-            if ($res['response']['code'] == 200) {
-                              
+            if (is_array($res) && $res['response']['code'] == 200) {
                 $responseDoc = simplexml_load_string($res['body']);
                 $bodyNode = $responseDoc->xpath('//s:Body');
                 
@@ -1087,9 +1086,12 @@ class SOAPMessenger {
                 $response = $bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult;
                 
             } else {
-                
-                $errorMessage = "The request response code is: " . $res->getStatusCode() . " and the cause is: " . $res->getReasonPhrase() . ".";
-                throw new BeyondPaySDKException(BeyondPaySDKException::BAD_RESPONSE(), new Exception($errorMessage));                
+
+		$code = is_array($res) ? $res['response']['code'] : $res->get_error_code();
+		$msg = is_array($res) ? $res['body'] : $res->get_error_message();
+                $errorMessage = "The request response code is: " . $code . " and the cause is: " . $msg . ".";
+                throw new BeyondPaySDKException(BeyondPaySDKException::BAD_RESPONSE(), new Exception($errorMessage));
+
             }
             
         } catch (Throwable $exc) {
