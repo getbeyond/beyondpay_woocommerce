@@ -14,6 +14,16 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 
 ## Installation
 
+There are 2 primary ways to install this plugin: **Automatic** or **Manual**
+
+### Automatic Installation
+1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
+1. Enter "Beyond Pay" in the search form in the top right of the screen.
+1. Select *Beyond Pay for WooCommerce* from the search results.
+1. Click the **Install Now** button to install the plugin.
+1. Click **Activate** to activate the plugin.
+
+### Manual Installation
 1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
 1. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
 1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
@@ -68,7 +78,25 @@ Not yet, but this feature is coming soon!
 
 **How can I get further support?**
 
-Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com) or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues).
+Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com), [submit a support ticket via WordPress](https://wordpress.org/support/plugin/beyond-pay-for-woocommerce/), or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues). For basic support and troubleshooting of your credit card authorizations and sales, you may also contact our Service Center at 1-888-480-1571.
+
+## Uninstalling
+
+### Automatic Uninstallation
+1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
+1. Click the **Deactivate** link for Beyond Pay for WooCommerce.
+1. Click the **Delete** link for Beyond Pay for WooCommerce.
+
+### Manual Uninstallation
+
+***Note: this procedure requires manual deletion of files from your WordPress server. Please ensure you have made a complete back up of your site before proceeding with manual uninstallation.***
+
+1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
+1. Click the **Deactivate** link for Beyond Pay for WooCommerce.
+1. Connect to your WordPress server via [SFTP client](https://en.wikipedia.org/wiki/SFTP).
+1. On your server, navigate to your WordPress installation directory and then to the **/wp-content/plugins** folder.
+1. Delete the plugin folder named **beyondpay-gateway**.
+1. From your WordPress **/wp-admin** page, navigate to **Plugins** and confirm that Beyond Pay for WooCommerce is no longer installed.
 
 ## Screenshots
 
