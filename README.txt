@@ -21,28 +21,38 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 - Simplifies merchant PCI compliance obligations to the shorter [Self-Assessment Questionnaire "A" (SAQ-A)](https://www.pcisecuritystandards.org/pci_security/completing_self_assessment)
 - Support either pre-authorization and later capture when WooCommerce order status changes, or authorization and capture at once (the combined "sale" transaction type)
 - Optimize B2B card acceptance costs by automatically sending additional transaction data elements (also known as ["Level II" and "Level III" information](https://www.getbeyond.com/b2b-payments/)
-- Custom CSS styling support for the hosted payment fields so that you can create your ideal checkout experience
+- Custom CSS styling support for the hosted payment fields so you can create your ideal checkout experience
 - Customizable gateway response and error messaging
 - Test/sandbox mode for development and staging
 
 ## Installation
 
-1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
-1. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
+There are 2 primary ways to install this plugin: **Automatic** or **Manual**
+
+### Automatic Installation
 1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
-1. Click the **Upload Plugin** button at the top of the screen.
-1. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
-1. Click **Install Now**.
-1. When the installation is complete you will see the message "Plugin installed successfully."
-1. Click the **Activate Plugin** button at the bottom of the page.
+2. Enter "Beyond Pay" in the search form in the top right of the screen.
+3. Select *Beyond Pay for WooCommerce* from the search results.
+4. Click the **Install Now** button to install the plugin.
+5. Click **Activate** to activate the plugin.
+
+### Manual Installation
+1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
+2. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
+3. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
+4. Click the **Upload Plugin** button at the top of the screen.
+5. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
+6. Click **Install Now**.
+7. When the installation is complete you will see the message "Plugin installed successfully."
+8. Click the **Activate Plugin** button at the bottom of the page.
     - *For more information on managing WordPress plugins, see https://wordpress.org/support/article/managing-plugins/*
 
 ## Configuration
 
 1. From your WordPress **/wp-admin** page, navigate to **WooCommerce > Settings**.
-1. Select the **Payments** tab at the top of the screen.
-1. Click the **Manage** button for the Beyond Pay Gateway payment method.
-1. Proceed to configure payment method options available on this page:
+2. Select the **Payments** tab at the top of the screen.
+3. Click the **Manage** button for the Beyond Pay Gateway payment method.
+4. Proceed to configure payment method options available on this page:
   - **Enable/Disable** - toggle to control whether this payment method is enabled or disabled
   - **Title** - this controls how this payment method is listed to the consumer during checkout; defaults to "Credit/Debit Card"
   - **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
@@ -58,6 +68,24 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 5. Click the **Save Changes** button once you have completed configuration; the page will refresh and a message reading "Your settings have been saved" will display at the top.
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
+
+## Uninstalling
+
+### Automatic Uninstallation
+1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
+2. Click the **Deactivate** link for Beyond Pay for WooCommerce.
+3. Click the **Delete** link for Beyond Pay for WooCommerce.
+
+### Manual Uninstallation
+
+***Note: this procedure requires manual deletion of files from your WordPress server. Please ensure you have made a complete back up of your site before proceeding with manual uninstallation.***
+
+1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
+2. Click the **Deactivate** link for Beyond Pay for WooCommerce.
+3. Connect to your WordPress server via [SFTP client](https://en.wikipedia.org/wiki/SFTP).
+4. On your server, navigate to your WordPress installation directory and then to the **/wp-content/plugins** folder.
+5. Delete the plugin folder named **beyondpay-gateway**.
+6. From your WordPress **/wp-admin** page, navigate to **Plugins** and confirm that Beyond Pay for WooCommerce is no longer installed.
 
 == Frequently Asked Questions ==
 
@@ -81,7 +109,7 @@ Not yet, but this feature is coming soon!
 
 = How can I get further support? =
 
-Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com) or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues).
+Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com), or [submit a support ticket via WordPress](https://wordpress.org/support/plugin/beyond-pay-for-woocommerce/), or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues). For basic support and troubleshooting of your credit card transactions, batches, etc., you may also contact our Service Center at 1-888-480-1571.
 
 == Screenshots ==
 
@@ -98,7 +126,7 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 * Subscription support added
 
 = 1.3.1 =
-* Library naming updates
+* Namespace updates, library changes, and general cleanup.
 
 = 1.3.0 =
 * Added advanced CSS styling options for iframe.
