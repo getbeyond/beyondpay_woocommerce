@@ -12,7 +12,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->has_fields = true;
 	$this->method_title = 'Beyond Pay Gateway';
 	$this->method_description = 'Securely accept credit card payments using Beyond Pay gateway and optimize your B2B interchange with support for Level III processing.'; // will be displayed on the options page
-	// TODO: add refunds
 	$this->supports = array(
 	    'products',
 	    // 'refunds',
@@ -24,9 +23,10 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    'subscription_date_changes',
 	    'subscription_payment_method_change',
 	    'subscription_payment_method_change_customer',
-	    'subscription_payment_method_change_admin',
+	    // 'subscription_payment_method_change_admin',
 	    'multiple_subscriptions',
-	    'tokenization'
+	    'tokenization',
+	    'add_payment_method'
 	);
 
 	// Method with all the options fields
@@ -203,8 +203,15 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    echo wpautop(wp_kses_post(trim($this->description)));
 	}
 	$css = $this->get_option('use_custom_styling') === 'yes' ?
-		$this->get_option('styling') :
-		file_get_contents(dirname(__DIR__) . '/assets/css/payment-styling.css');
+	    $this->get_option('styling') :
+	    file_get_contents(dirname(__DIR__) . '/assets/css/payment-styling.css');
+	
+	if ( is_checkout() ) {
+	    $this->tokenization_script();
+	    $this->saved_payment_methods();
+	}
+
+	$form_event = isset($_GET['change_payment_method']) || is_add_payment_method_page() ? 'submit' : 'checkout_place_order';
 	?>
 	<fieldset id="wc-beyond_pay-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">
 
@@ -223,17 +230,21 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    <div class="clear"></div>
 	</fieldset>
 	<script type="text/javascript">
-	    if (typeof (tokenpay) === 'undefined') {
-	      tokenpay = TokenPay('<?php echo $this->public_key ?>');
-	    }
-	    attachBeyondPay(tokenpay);
+	    attachBeyondPay('<?php echo $this->public_key ?>','<?php echo $form_event ?>');
 	</script>
 	<?php
+	if ( is_checkout() && !isset($_GET['change_payment_method'])) {
+	    if($this->cart_has_subscription()){
+		echo "<p>Your payment method will be saved to process subscription payments.</p>";
+	    } else {
+		$this->save_payment_method_checkbox();
+	    }
+	}
     }
 
     public function payment_scripts() {
 
-	if (!is_cart() && !is_checkout() /* && ! isset( $_GET['pay_for_order'] ) */) {
+	if (!is_cart() && !is_checkout() && !is_add_payment_method_page() ) {
 	    return;
 	}
 
@@ -259,12 +270,22 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
     public function validate_fields() {
 
-	if (empty($_POST['billing_first_name'])) {
+	if (
+	    !is_add_payment_method_page() && 
+	    empty($_REQUEST['pay_for_order']) && // Change payment method page
+	    empty($_POST['billing_first_name'])
+	) {
 	    wc_add_notice('First name is required!', 'error');
 	    return false;
 	}
-	if (empty($_POST['beyond_pay_token'])) {
-	    wc_add_notice('Failed to process payment data.', 'error');
+	if (
+	    empty($_POST['beyond_pay_token']) && 
+	    ( // Saved token
+		empty($_POST['wc-beyondpay-payment-token']) ||
+		$_POST['wc-beyondpay-payment-token'] == 'new'
+	    )
+	) {
+	    wc_add_notice('Unable to generate payment token.', 'error');
 	    return false;
 	}
 	return true;
@@ -275,13 +296,66 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	global $woocommerce;
 
 	$order = wc_get_order($order_id);
+	$pay_with_token = !empty($_POST['wc-beyondpay-payment-token']) && is_numeric($_POST['wc-beyondpay-payment-token']) ?
+	    intval($_POST['wc-beyondpay-payment-token']) :
+	    false;
+	$save_token = !empty($_POST['wc-beyondpay-new-payment-method']) && $_POST['wc-beyondpay-new-payment-method'] === 'true';
+	$change_payment_for_order = !empty($_POST['woocommerce_change_payment']) ?
+	    intval($_POST['woocommerce_change_payment']) :
+	    false;
+	
+	if($change_payment_for_order) {
+	    if($pay_with_token){
+		$token = $this->get_token($pay_with_token);
+	    } else {
+		$request = $this->build_payment_request(
+		    'save_payment_method',
+		    null,
+		    null,
+		    sanitize_key($_POST['beyond_pay_token'])
+		);
 
-	$request = $this->build_payment_request(
-	    'payment',
-	    $order->get_total(),
-	    $order->get_transaction_id()
-	);
-	$request->AuthenticationTokenId = sanitize_key($_POST['beyond_pay_token']);
+		$conn = new BeyondPay\BeyondPayConnection();
+		$response = $conn->processRequest($this->api_url, $request);
+
+		if ($response->ResponseCode == '00000') {
+		    // Not passing order - don't want to add this token to order, but update_payment_token_ids().
+		    $token = $this->save_token_from_response($response, get_current_user_id());
+		} else {
+		    wc_add_notice('Failed to change payment method: '.$response->ResponseDescription);
+		}
+	    }
+	    $subscription = new WC_Subscription($order_id);
+	    if(!empty($token)){
+		$order->get_data_store()->update_payment_token_ids($order, array($token->get_id()));
+		return array(
+		    'result' => 'success',
+		    'redirect' => $subscription->get_view_order_url()
+		);
+	    } else {
+		return array(
+		    'result' => 'failure',
+		    'redirect' => $subscription->get_view_order_url()
+		);
+	    }
+	}
+	
+	if($pay_with_token){
+	    $token = $this->get_token($pay_with_token);
+	    $request = $this->build_payment_request(
+		'token_payment',
+		$order->get_total(),
+		$order->get_transaction_id(),
+		$token
+	    );
+	} else {
+	    $request = $this->build_payment_request(
+		'payment',
+		$order->get_total(),
+		$order->get_transaction_id(),
+		sanitize_key($_POST['beyond_pay_token'])
+	    );
+	}
 
 	$address = $order->get_address('billing');
 	if (!empty($address)) {
@@ -318,18 +392,19 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	if ($response->ResponseCode == '00000') {
 	    
 	    if (
-		    function_exists('wcs_order_contains_subscription') &&
-		    wcs_order_contains_subscription( $order )
+		$this->has_subscription($order) ||
+		$save_token
 	    ) {
-		$token = new WC_Payment_Token_CC();
-		$token->set_token($response->responseMessage->Token);
-		$token->set_last4(substr($response->responseMessage->Token, -4));
-		$token->set_expiry_month(substr($response->responseMessage->ExpirationDate, 0, 2));
-		$token->set_expiry_year('20'.substr($response->responseMessage->ExpirationDate, -2));
-		$token->set_card_type($response->responseMessage->CardType);
-		$token->set_gateway_id($this->id);
-		$token->set_user_id($order->get_user_id());
-		$token->save();
+		$this->save_token_from_response(
+		    $response,
+		    $save_token ? $order->get_user_id() : null,
+		    $order
+		);
+	    } elseif ($pay_with_token) {
+		if (!empty($response->responseMessage->CardType) && $token->get_card_type() === 'Card'){
+		    $token->set_card_type($response->responseMessage->CardType);
+		    $token->save();
+		}
 		$order->add_payment_token($token);
 	    }
 
@@ -348,6 +423,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'redirect' => $this->get_return_url($order)
 	    );
 	} else {
+	    var_dump($request);
+	    var_dump($response);
 	    $errorMsg = $this->custom_error_message ?
 		    $this->custom_error_message :
 		    'Something went wrong: %S. Please try again.';
@@ -355,7 +432,87 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    return;
 	}
     }
+
+    /**
+     * Creates and saves a token based on response data. Reuses existing tokens if possible.
+     * @param BeyondPay\BeyondPayResponse $response
+     * @param int $user_id
+     * @param WC_Order $order
+     * @return WC_Payment_Token
+     */
+    private function save_token_from_response($response, $user_id = null, $order = null){
+	$token = $this->find_existing_token($response->responseMessage->Token);
+	
+	if(!$token) {
+	    $token = new WC_Payment_Token_CC();
+	    $token->set_token($response->responseMessage->Token);
+	    $token->set_last4(substr($response->responseMessage->Token, -4));
+	    $token->set_expiry_month(substr($response->responseMessage->ExpirationDate, 0, 2));
+	    $token->set_expiry_year('20'.substr($response->responseMessage->ExpirationDate, -2));
+	    $card_type = !empty($response->responseMessage->CardType) ?
+		$response->responseMessage->CardType :
+		'Card';
+	    $token->set_card_type($card_type);
+	    $token->set_gateway_id($this->id);
+	    if(!empty($user_id)){
+		$token->set_user_id($user_id);
+	    }
+	    $token->save();
+	} elseif (!empty($response->responseMessage->CardType) && $token->get_card_type()==='Card'){
+	    $token->set_card_type($response->responseMessage->CardType);
+	    $token->save();
+	}
+	
+	if(!empty($order)){
+	    $order->add_payment_token($token);
+	}
+	
+	return $token;
+    }
     
+    /**
+     * If exists returns users token object matching the raw token string.
+     * @param string $token_str The raw token string
+     * @return WC_Payment_Token | null
+     */
+    private function find_existing_token($token_str){
+	$tokens = $this->get_tokens();
+	foreach ($tokens as $t){
+	    if($token_str === $t->get_token()){
+		return $t;
+	    }
+	}
+	return null;
+    }
+    
+    /**
+     * If exists returns users token object with given id.
+     * @param string $token_id The token id
+     * @return WC_Payment_Token | null
+     */
+    private function get_token($token_id){
+	$tokens = $this->get_tokens();
+	foreach ($tokens as $t){
+	    if($token_id === $t->get_id()){
+		return $t;
+	    }
+	}
+	return null;
+    }
+    
+    private function has_subscription($order){
+	return function_exists('wcs_order_contains_subscription') && 
+	    wcs_order_contains_subscription( $order );
+    }
+    
+    private function cart_has_subscription(){
+	return function_exists('wcs_order_contains_subscription') && 
+	(
+	    WC_Subscriptions_Cart::cart_contains_subscription() ||
+	    wcs_cart_contains_renewal()
+	);
+    }
+
     /**
      * Update request with Level 2/3 data if needed (checks settings).
      * @param BeyondPay\BeyondPayRequest $request The request to update
@@ -439,9 +596,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    $amount_to_charge,
 		    $order->get_transaction_id()
 		);
-
-		$request->requestMessage->Token = $token->get_token();
-		$request->requestMessage->ExpirationDate = $token->get_expiry_month() . substr($token->get_expiry_year(),-2);
 		$this->fill_level_2_3_data($request, $order);
 
 		$conn = new BeyondPay\BeyondPayConnection();
@@ -491,12 +645,13 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
     
     /**
      * Build a base for the payment gateway request.
-     * @param string $payment_type payment|capture|scheduled_subscription_payment
+     * @param string $payment_type payment|capture|save_payment_method|scheduled_subscription_payment
      * @param float $amount_to_charge Amount in dollars (will be converted to cents).
-     * @param string $reference_number
+     * @param string $reference_number Transaction reference number.
+     * @param string|WC_Payment_Token $token Single use authentication token provided by token pay or the stored payment token.
      * @return BeyondPay\BeyondPayRequest
      */
-    public function build_payment_request($payment_type, $amount_to_charge, $reference_number=null){
+    public function build_payment_request($payment_type, $amount_to_charge = null, $reference_number = null, $token = null){
 	$configs = array(
 	    'payment' => array(
 		'request_type' => '004',
@@ -508,7 +663,17 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'auth_with_token' => false,
 		'transaction_type' => 'capture'
 	    ),
+	    'save_payment_method' => array(
+		'request_type' => '001',
+		'auth_with_token' => true,
+		'transaction_type' => null
+	    ),
 	    'scheduled_subscription_payment' => array(
+		'request_type' => '004',
+		'auth_with_token' => false,
+		'transaction_type' => 'sale'
+	    ),
+	    'token_payment' => array(
 		'request_type' => '004',
 		'auth_with_token' => false,
 		'transaction_type' => $this->transaction_mode
@@ -526,6 +691,15 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	
 	$request->requestMessage = new BeyondPay\RequestMessage();
 	
+	if($token){
+	    if(is_string($token)){
+		$request->AuthenticationTokenId = $token;
+	    } elseif ($token instanceof WC_Payment_Token) {
+		$request->requestMessage->Token = $token->get_token();
+		$request->requestMessage->ExpirationDate = $token->get_expiry_month() . substr($token->get_expiry_year(),-2);
+	    }
+	}
+	
 	if($config['auth_with_token']){
 	    $request->PrivateKey = $this->private_key;
 	}else{
@@ -534,7 +708,9 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	
 	$request->requestMessage->AcctType = "R";
-	$request->requestMessage->Amount = round($amount_to_charge * 100);
+	if($amount_to_charge !== null){
+	    $request->requestMessage->Amount = round($amount_to_charge * 100);
+	}
 	$request->requestMessage->HolderType = "O";
 	$request->requestMessage->MerchantCode = $this->merchant_code;
 	$request->requestMessage->MerchantAccountCode = $this->merchant_account_code;
@@ -542,9 +718,74 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $request->requestMessage->ReferenceNumber = $reference_number;
 	}
 	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
-	$request->requestMessage->TransactionType = $config['transaction_type'];
+	if($config['transaction_type']){
+	    $request->requestMessage->TransactionType = $config['transaction_type'];
+	}
+	
 	$request->requestMessage->TransIndustryType = "EC";
 	
 	return $request;
     }
+    
+    /**
+     * Add payment method via account screen.
+     */
+    public function add_payment_method() {
+	if(!is_user_logged_in()){
+	    wc_add_notice( 'User not logged in', 'error' );
+	    return array(
+		'result'   => 'failure',
+		'redirect' => wc_get_endpoint_url( 'payment-methods' ),
+	    );
+	}
+	$request = $this->build_payment_request(
+	    'save_payment_method',
+	    null,
+	    null,
+	    sanitize_key($_POST['beyond_pay_token'])
+	);
+	
+	$conn = new BeyondPay\BeyondPayConnection();
+	$response = $conn->processRequest($this->api_url, $request);
+
+	if ($response->ResponseCode == '00000') {
+	    $this->save_token_from_response($response, get_current_user_id());
+	    return array(
+		'result'   => 'success',
+		'redirect' => wc_get_endpoint_url( 'payment-methods' )
+	    );
+	} else {
+	    wc_add_notice( 'Failed to add payment method: '.$response->ResponseDescription.' ('.$response->ResponseCode.')', 'error' );
+	    return array(
+		'result'   => 'failure',
+		'redirect' => wc_get_endpoint_url( 'add-payment-method' )
+	    );
+	}
+    }
+    /**
+     * Override the default when on subscription's change payment method page, 
+     * to check payment method linked to subscription rather than default.
+     */
+    public function get_saved_payment_method_option_html($token) {
+	if(!isset($_GET['change_payment_method'])){
+	    return parent::get_saved_payment_method_option_html($token);
+	} else {
+	    $order = wc_get_order(intval($_REQUEST['change_payment_method']));
+	    $tokens = $order->get_payment_tokens();
+	    if(empty($tokens)) {
+		$checked = checked($token->is_default(), true, false);
+	    } else {
+		$checked = checked($token->get_id() === $tokens[0], true, false);
+	    }
+	    $html = sprintf(
+	       '<li class="woocommerce-SavedPaymentMethods-token">
+		       <input id="wc-%1$s-payment-token-%2$s" type="radio" name="wc-%1$s-payment-token" value="%2$s" style="width:auto;" class="woocommerce-SavedPaymentMethods-tokenInput" %4$s />
+		       <label for="wc-%1$s-payment-token-%2$s">%3$s</label>
+	       </li>', esc_attr($this->id), esc_attr($token->get_id()), esc_html($token->get_display_name()), $checked
+	    );
+
+	   return apply_filters('woocommerce_payment_gateway_get_saved_payment_method_option_html', $html, $token, $this);   
+	}
+    }
+
 }

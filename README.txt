@@ -2,7 +2,7 @@
 Contributors: beyondpay
 Tags: credit card, payment, woocommerce, payment gateway
 Requires at least: 4.7
-Tested up to: 5.5
+Tested up to: 5.6
 Stable tag: trunk
 Requires PHP: 7.0
 License: MIT
@@ -90,6 +90,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 3. Additional configuration settings for Beyond Pay plugin
 
 == Changelog ==
+
+= 1.4.1 =
+* Payment methods management support added
 
 = 1.4.0 =
 * Subscription support added
