@@ -282,7 +282,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    empty($_POST['beyond_pay_token']) && 
 	    ( // Saved token
 		empty($_POST['wc-beyondpay-payment-token']) ||
-		$_POST['wc-beyondpay-payment-token'] == 'new'
+		$_POST['wc-beyondpay-payment-token'] === 'new'
 	    )
 	) {
 	    wc_add_notice('Unable to generate payment token.', 'error');
@@ -499,12 +499,22 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	return null;
     }
-    
+
+    /**
+     * Check if the order has subscriptions (WooCommerce Subscriptions)
+     * @param type $order
+     * @return boolean
+     */
     private function has_subscription($order){
 	return function_exists('wcs_order_contains_subscription') && 
 	    wcs_order_contains_subscription( $order );
     }
-    
+
+    /**
+     * Check if the cart has subscriptions (WooCommerce Subscriptions)
+     * @param type $order
+     * @return boolean
+     */
     private function cart_has_subscription(){
 	return function_exists('wcs_order_contains_subscription') && 
 	(
@@ -594,7 +604,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$request = $this->build_payment_request(
 		    'scheduled_subscription_payment',
 		    $amount_to_charge,
-		    $order->get_transaction_id()
+		    $order->get_transaction_id(),
+		    $token
 		);
 		$this->fill_level_2_3_data($request, $order);
 
