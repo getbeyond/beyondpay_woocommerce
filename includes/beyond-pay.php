@@ -860,6 +860,10 @@ class BeyondPayConnection {
 
     }
 
+    /**
+     * @param type $objectToSerialize
+     * @return string
+     */
     public static function Serialize ($objectToSerialize){
 
         $result = NULL;
@@ -972,7 +976,8 @@ class BeyondPayConnection {
 
         if (is_scalar($fieldValue)) {
 
-            $xmlNode->addChild($fieldName, $fieldValue);
+	    $stripped = preg_replace('/[^a-z0-9_\\-]/i', '', $fieldValue);
+            $xmlNode->addChild($fieldName, $stripped);
         }
     }
 
