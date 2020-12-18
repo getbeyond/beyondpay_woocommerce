@@ -119,6 +119,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
+= 1.3.2 =
+* Strip unsupported chars for transaction request.
+
 = 1.3.1 =
 * Namespace updates, library changes, and general cleanup.
 
