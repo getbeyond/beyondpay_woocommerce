@@ -14,7 +14,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->method_description = 'Securely accept credit card payments using Beyond Pay gateway and optimize your B2B interchange with support for Level III processing.'; // will be displayed on the options page
 	$this->supports = array(
 	    'products',
-	    // 'refunds',
+	    'refunds',
 	    'subscriptions',
 	    'subscription_cancellation',
 	    'subscription_suspension',
@@ -290,6 +290,25 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	return true;
     }
+    
+    public function process_refund($order_id, $amount = null, $reason = '') {
+	$order = wc_get_order($order_id);
+	$request = $this->build_payment_request(
+	    'refund',
+	    $amount,
+	    $order->get_transaction_id(),
+	    null
+	);
+	$conn = new BeyondPay\BeyondPayConnection();
+	$response = $conn->processRequest($this->api_url, $request);
+
+	if ($response->ResponseCode == '00000') {
+	    return true;
+	} else {
+	    $order->add_order_note("Error refunding order: $response->ResponseDescription");
+	    return false;
+	}
+    }
 
     public function process_payment($order_id) {
 
@@ -423,8 +442,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'redirect' => $this->get_return_url($order)
 	    );
 	} else {
-	    var_dump($request);
-	    var_dump($response);
 	    $errorMsg = $this->custom_error_message ?
 		    $this->custom_error_message :
 		    'Something went wrong: %S. Please try again.';
@@ -664,15 +681,15 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
      */
     public function build_payment_request($payment_type, $amount_to_charge = null, $reference_number = null, $token = null){
 	$configs = array(
-	    'payment' => array(
-		'request_type' => '004',
-		'auth_with_token' => true,
-		'transaction_type' => $this->transaction_mode
-	    ),
 	    'capture' => array(
 		'request_type' => '019',
 		'auth_with_token' => false,
 		'transaction_type' => 'capture'
+	    ),
+	    'payment' => array(
+		'request_type' => '004',
+		'auth_with_token' => true,
+		'transaction_type' => $this->transaction_mode
 	    ),
 	    'save_payment_method' => array(
 		'request_type' => '001',
@@ -688,6 +705,11 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'request_type' => '004',
 		'auth_with_token' => false,
 		'transaction_type' => $this->transaction_mode
+	    ),
+	    'refund' => array(
+		'request_type' => '012',
+		'auth_with_token' => false,
+		'transaction_type' => 'refund'
 	    )
 	);
 	if(empty($configs[$payment_type])) {
