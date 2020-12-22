@@ -617,7 +617,13 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$subscription->payment_failed();
 		continue;
 	    } else {
-		$token = new WC_Payment_Token_CC($tokens[0]);
+		try{
+		    $token = new WC_Payment_Token_CC($tokens[0]);
+		} catch(exception $e) {
+		    $order->add_order_note('Missing valid payment method to process subscription.');
+		    $subscription->payment_failed();
+		    return;
+		}
 		$request = $this->build_payment_request(
 		    'scheduled_subscription_payment',
 		    $amount_to_charge,
