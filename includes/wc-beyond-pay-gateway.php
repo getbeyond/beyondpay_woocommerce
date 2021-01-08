@@ -61,6 +61,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$additional_data = $this->get_option('additional_data', 'off');
 	$this->use_level_2_data = $additional_data !== 'off';
 	$this->use_level_3_data = $additional_data == 'level3';
+	$this->connect_subscription_payments_with_users = true;
 
 	add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 	add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -416,7 +417,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    ) {
 		$this->save_token_from_response(
 		    $response,
-		    $save_token ? $order->get_user_id() : null,
+		    $save_token || $this->connect_subscription_payments_with_users ? $order->get_user_id() : null,
 		    $order
 		);
 	    } elseif ($pay_with_token) {
