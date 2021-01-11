@@ -674,7 +674,11 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $order->save_meta_data();
 	    $order->add_order_note('Payment for this order was captured.');
 	} else {
-	    $order->add_order_note('Unable to capture payment: ' . $response->ResponseDescription);
+	    $order->add_order_note(
+		'Error capturing payment with Beyond Pay, capture response: '.
+		$response->ResponseDescription.
+		' (code '.$response->ResponseCode.')'
+	    );
 	}
     }
     

@@ -125,6 +125,10 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 = 1.4.0 =
 * Subscription support added
 
+= 1.3.3 =
+* Don't strip chars on User and Password fields;
+* Improved error handling on capture failures.
+
 = 1.3.2 =
 * Strip unsupported chars for transaction request.
 
