@@ -5,7 +5,7 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.3.2
+ * Version: 1.3.3
  * Text Domain: beyond-pay-for-woocommerce
  *
  * Tested up to: 5.5.3
@@ -80,8 +80,11 @@ function beyond_pay_order_update($order_id){
 	    $order->save_meta_data();
 	    $order->add_order_note('Payment for this order was captured.');
 	} else {
-	    wc_add_notice('Error capturing payment with Beyond Pay', 'error');
-	    $order->add_order_note('Beyond Pay Capture Response: '.htmlentities(BeyondPay\BeyondPayConnection::Serialize($response)));
+	    $order->add_order_note(
+		'Error capturing payment with Beyond Pay, capture response: '.
+		$response->ResponseDescription.
+		' (code '.$response->ResponseCode.')'
+	    );
 	}
     }
 }

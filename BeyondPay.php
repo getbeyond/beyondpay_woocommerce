@@ -972,7 +972,10 @@ class BeyondPayConnection {
 
         if (is_scalar($fieldValue)) {
 
-	    $stripped = preg_replace('/[^a-z0-9_\\-]/i', '', $fieldValue);
+	    $stripped = in_array($fieldName, array('User','Password')) ? 
+		$fieldValue :
+		preg_replace('/[^a-z0-9_\\- ]/i', '', $fieldValue);
+	    
             $xmlNode->addChild($fieldName, $stripped);
         }
     }
