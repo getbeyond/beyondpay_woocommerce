@@ -428,7 +428,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$order->add_payment_token($token);
 	    }
 
-	    if ($this->transaction_mode === "sale-auth") {
+	    if ($request->TransactionType === "sale-auth") {
 		$order->add_meta_data('_beyond_pay_authorized', 1);
 		$order->add_order_note('Payment was authorized and will be captured when order status is changed to complete.');
 	    } else {
@@ -637,7 +637,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$response = $conn->processRequest($this->api_url, $request);
 
 		if ($response->ResponseCode == '00000') {
-		    if ($this->transaction_mode === "sale-auth") {
+		    if ($request->TransactionType === "sale-auth") {
 			$order->add_meta_data('_beyond_pay_authorized', 1);
 			$order->add_order_note('Payment was authorized and will be captured when order status is changed to complete.');
 		    } else {

@@ -27,13 +27,13 @@ function attachBeyondPay(publicKey, formEventType){
         if(is_processing){
           return false;
         }
-        is_processing = true;
         var saved_methods_radio = checkout_form['wc-beyondpay-payment-token'];
         if(
           checkout_form.payment_method.value !== 'beyondpay' 
           || (saved_methods_radio && saved_methods_radio.value !== 'new')){
           return true;
         }
+        is_processing = true;
         var token_input = document.getElementById("beyond_pay_token");
         if(token_used){
           token_input.value = "";
@@ -43,10 +43,10 @@ function attachBeyondPay(publicKey, formEventType){
             is_processing = false;
             return true;
         } else {
-          is_processing = false;
           tokenpay.createToken(
             function(res) {
               token_used = false;
+              is_processing = false;
               token_input.value = res.token;
               document.getElementById('place_order').click();
             },
@@ -56,8 +56,8 @@ function attachBeyondPay(publicKey, formEventType){
               token_input.value = "";
             }
           );
+          return false;
         }
-        return false;
     });
   });
 }
