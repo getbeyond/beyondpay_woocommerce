@@ -5,7 +5,7 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.3.3
+ * Version: 1.3.4
  * Text Domain: beyond-pay-for-woocommerce
  *
  * Tested up to: 5.5.3
@@ -311,7 +311,7 @@ function beyond_pay_init_gateway_class() {
     if (typeof (tokenpay) === 'undefined') {
       tokenpay = TokenPay('<?php echo $this->public_key ?>');
     }
-    attachBeyondPay(tokenpay);
+    attachBeyondPay(tokenpay,<?php echo $this->testmode ? 'true' : 'false' ?>);
 </script>
 <?php
 	}
