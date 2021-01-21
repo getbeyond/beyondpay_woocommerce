@@ -3,11 +3,11 @@
  * @param {string} publicKey
  * @returns {undefined}
  */
-function attachBeyondPay(publicKey, formEventType){
+function attachBeyondPay(publicKey, formEventType, isTestMode){
   var firstRun = false;
   if (typeof (tokenpay) === 'undefined') {
     firstRun = true;
-    tokenpay = TokenPay(publicKey);
+    tokenpay = TokenPay(publicKey, isTestMode);
   }
 
   tokenpay.initialize({

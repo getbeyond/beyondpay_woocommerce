@@ -231,7 +231,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    <div class="clear"></div>
 	</fieldset>
 	<script type="text/javascript">
-	    attachBeyondPay('<?php echo $this->public_key ?>','<?php echo $form_event ?>');
+	    attachBeyondPay('<?php echo $this->public_key ?>','<?php echo $form_event ?>', <?php echo $this->testmode ? 'true' : 'false' ?>);
 	</script>
 	<?php
 	if ( is_checkout() && !isset($_GET['change_payment_method'])) {
