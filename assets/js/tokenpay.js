@@ -1,4 +1,4 @@
-window.TokenPay = function(publicKey) {
+window.TokenPay = function(publicKey, isTestMode) {
   if (!publicKey) {
     console.error('Key is required');
     return;
@@ -6,7 +6,8 @@ window.TokenPay = function(publicKey) {
 
   var payFrame = {
     publicKey: publicKey,
-    useACH: false
+    useACH: false,
+    isTestMode: isTestMode
   };
   var iframe;
   var dataElement;
@@ -58,7 +59,25 @@ window.TokenPay = function(publicKey) {
 
     const currentIframeHref = new URL(document.location.href);
     const urlOrigin = currentIframeHref.origin;
-    iframe.src = "https://www.bridgepaynetsecuretest.com/Bridgepay.WebSecurity/TokenPay/js/dataValidator.html";
+    var isIE = /*@cc_on!@*/false || !!document.documentMode;
+    
+    if (payFrame.isTestMode) {
+      if (isIE) {
+        //Needs to be the ie-js URL
+        iframe.src = "https://www.bridgepaynetsecuretest.com/WebSecurity/TokenPay/ie-js/dataValidator.html";
+      } else {
+        //Needs to be the js URL
+        iframe.src = "https://www.bridgepaynetsecuretest.com/WebSecurity/TokenPay/js/dataValidator.html";
+      }
+    } else {
+      if (isIE) {
+          //Needs to be the ie-js URL
+          iframe.src = "https://api.getbeyondpay.com/WebSecurity/TokenPay/ie-plain-js/dataValidator.html";
+      } else {
+          //Needs to be the js URL
+          iframe.src = "https://api.getbeyondpay.com/WebSecurity/TokenPay/plain-js/dataValidator.html";
+      }
+    }
 
     // iframe.src = "TokenPay/plain-js/dataValidator.html"; // For dev
 

@@ -113,6 +113,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.3.4
+* Differentiate test and prod TokenPay URLs.
+
 ### 1.3.3
 * Don't strip chars on User and Password fields;
 * Improved error handling on capture failures.
