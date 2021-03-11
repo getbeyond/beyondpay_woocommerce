@@ -835,14 +835,14 @@ class BeyondPayConnection {
             if (empty($className)) {
                 return;
             }
-
+            
 	    $nsClassName = 'BeyondPay\\'.$className;
             if (!class_exists($nsClassName)) {
                 return;
             }
-
+            
             $result = new $nsClassName;
-
+            
             $xmlDoc = simplexml_load_string($stringXML);
 
             if ($result instanceof BeyondPayResponse) {
@@ -860,6 +860,10 @@ class BeyondPayConnection {
 
     }
 
+    /**
+     * @param type $objectToSerialize
+     * @return string
+     */
     public static function Serialize ($objectToSerialize){
 
         $result = NULL;
@@ -975,7 +979,6 @@ class BeyondPayConnection {
 	    $stripped = in_array($fieldName, array('User','Password')) ? 
 		$fieldValue :
 		preg_replace('/[^a-z0-9_\\- ]/i', '', $fieldValue);
-	    
             $xmlNode->addChild($fieldName, $stripped);
         }
     }
@@ -1007,14 +1010,14 @@ class BeyondPayConnection {
             }
 
             if ($node->count() > 0){
-                //the node is an Object
+                //the node is an Object 
 		$nsField = 'BeyondPay\\'.$field;
                 if (!class_exists($nsField)) {
                     continue;
                 }
 
                 if ($isList) {
-
+		    
                     $listElement = new $nsField;
                     $object->{$field}[] = $listElement;
                     self::DeserializeXMLToObject($node, $listElement);
@@ -1070,17 +1073,16 @@ class SOAPMessenger {
             $headers["content-type"] = "text/xml";
 
             $requestBody = Constanst::SOAP_REQUEST_HEADER . $message_encode . Constanst::SOAP_REQUEST_FOOTER;
-
+            
             $res = wp_remote_post(
-		$paymentGatewayUrl,
+		$paymentGatewayUrl, 
 		[
 		    'headers' => $headers,
 		    'body' => $requestBody
 		]
 	    );
-
+            
             if (is_array($res) && $res['response']['code'] == 200) {
-
                 $responseDoc = simplexml_load_string($res['body']);
                 $bodyNode = $responseDoc->xpath('//s:Body');
 

@@ -113,6 +113,12 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.4.1
+* Payment methods management support added
+
+### 1.4.0
+* Subscription support added
+
 ### 1.3.4
 * Differentiate test and prod TokenPay URLs.
 
