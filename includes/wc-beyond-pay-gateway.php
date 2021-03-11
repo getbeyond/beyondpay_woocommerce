@@ -428,7 +428,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$order->add_payment_token($token);
 	    }
 
-	    if ($request->TransactionType === "sale-auth") {
+	    if ($request->requestMessage->TransactionType === "sale-auth") {
 		$order->add_meta_data('_beyond_pay_authorized', 1);
 		$order->add_order_note('Payment was authorized and will be captured when order status is changed to complete.');
 	    } else {
@@ -637,7 +637,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$response = $conn->processRequest($this->api_url, $request);
 
 		if ($response->ResponseCode == '00000') {
-		    if ($request->TransactionType === "sale-auth") {
+		    if ($request->requestMessage->TransactionType === "sale-auth") {
 			$order->add_meta_data('_beyond_pay_authorized', 1);
 			$order->add_order_note('Payment was authorized and will be captured when order status is changed to complete.');
 		    } else {
@@ -762,12 +762,13 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $request->requestMessage->ReferenceNumber = $reference_number;
 	}
 	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
+	file_put_contents('beyond.log','Transaction type: '.$config['transaction_type']."\n", FILE_APPEND);
 	if($config['transaction_type']){
 	    $request->requestMessage->TransactionType = $config['transaction_type'];
 	}
 	
 	$request->requestMessage->TransIndustryType = "EC";
-	
+	file_put_contents('beyond.log','Transaction type2: '.$config['transaction_type']."\n", FILE_APPEND);
 	return $request;
     }
     
