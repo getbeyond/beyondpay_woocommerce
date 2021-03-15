@@ -1,6 +1,6 @@
 === Beyond Pay for WooCommerce ===
 Contributors: beyondpay
-Tags: credit card, payment, woocommerce, payment gateway
+Tags: credit card, payment, woocommerce, payment gateway, subscriptions, subscription payments, recurring billing
 Requires at least: 4.7
 Tested up to: 5.6
 Stable tag: trunk
@@ -11,41 +11,19 @@ License URI: https://opensource.org/licenses/MIT
 Securely accept credit card payments using Beyond Pay gateway and optimize your cost of acceptance on B2B/corporate cards.
 
 == Description ==
-# Beyond Pay Gateway for WooCommerce
 Securely accept credit cards directly on your [WooCommerce](https://woocommerce.com) store using [Beyond](https://getbeyond.com) with this [WordPress](https://wordpress.org/) plugin.
 
 ## Features
 - Accept Visa, MasterCard, American Express, Discover, JCB, and Diners Club brand cards directly on your website
 - No redirect to a third-party hosted payment page, reducing checkout friction and cart abandonment
 - Card data is securely captured with Beyond Pay Gateway's hosted payment fields presented via inline frame (iframe) and tokenized before reaching your server
+- Recurring billing integration with the [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). Beyond Pay for WooCommerce subscription features include the ability for customers to store or change their cards on file, cancel/suspend/reactivate subscriptions, and modify subscription amounts and due dates.
 - Simplifies merchant PCI compliance obligations to the shorter [Self-Assessment Questionnaire "A" (SAQ-A)](https://www.pcisecuritystandards.org/pci_security/completing_self_assessment)
 - Support either pre-authorization and later capture when WooCommerce order status changes, or authorization and capture at once (the combined "sale" transaction type)
 - Optimize B2B card acceptance costs by automatically sending additional transaction data elements (also known as ["Level II" and "Level III" information](https://www.getbeyond.com/b2b-payments/)
 - Custom CSS styling support for the hosted payment fields so you can create your ideal checkout experience
 - Customizable gateway response and error messaging
 - Test/sandbox mode for development and staging
-
-## Installation
-
-There are 2 primary ways to install this plugin: **Automatic** or **Manual**
-
-### Automatic Installation
-1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
-2. Enter "Beyond Pay" in the search form in the top right of the screen.
-3. Select *Beyond Pay for WooCommerce* from the search results.
-4. Click the **Install Now** button to install the plugin.
-5. Click **Activate** to activate the plugin.
-
-### Manual Installation
-1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
-2. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
-3. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
-4. Click the **Upload Plugin** button at the top of the screen.
-5. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
-6. Click **Install Now**.
-7. When the installation is complete you will see the message "Plugin installed successfully."
-8. Click the **Activate Plugin** button at the bottom of the page.
-    - *For more information on managing WordPress plugins, see https://wordpress.org/support/article/managing-plugins/*
 
 ## Configuration
 
@@ -69,23 +47,41 @@ There are 2 primary ways to install this plugin: **Automatic** or **Manual**
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
 
-## Uninstalling
+## WooCommerce Subscriptions Integration
 
-### Automatic Uninstallation
-1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
-2. Click the **Deactivate** link for Beyond Pay for WooCommerce.
-3. Click the **Delete** link for Beyond Pay for WooCommerce.
+Beyond Pay for WooCommerce offers automated recurring billing functionality through integration with the official [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). The Subscriptions Extension must be purchased from WooCommerce before recurring payments can be accepted with Beyond Pay for WooCommerce.
 
-### Manual Uninstallation
+Setting up your subscriptions is simple:
 
-***Note: this procedure requires manual deletion of files from your WordPress server. Please ensure you have made a complete back up of your site before proceeding with manual uninstallation.***
+1. Create a subscription product in the Products module of WooCommerce and define the price and terms: e.g., "$5.90 every 2nd month".
+2. As customers purchase subscription products on your store, they will be prompted to create a user account and save their payment method on file.
+3. When the payment is due, Beyond Pay for WooCommerce will automatically charge the card on file without you having to do anything.
+4. The status of each scheduled payment is reported back to your WooCommerce Subscription extension in WooCommerce, whether successful or failed.
+5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date. 
 
-1. From your WordPress **/wp-admin** page, navigate to **Plugins**.
-2. Click the **Deactivate** link for Beyond Pay for WooCommerce.
-3. Connect to your WordPress server via [SFTP client](https://en.wikipedia.org/wiki/SFTP).
-4. On your server, navigate to your WordPress installation directory and then to the **/wp-content/plugins** folder.
-5. Delete the plugin folder named **beyondpay-gateway**.
-6. From your WordPress **/wp-admin** page, navigate to **Plugins** and confirm that Beyond Pay for WooCommerce is no longer installed.
+All card on file data is securely tokenized by Beyond Pay and never touches your server.
+
+== Installation ==
+
+There are 2 primary ways to install this plugin: **Automatic** or **Manual**
+
+### Automatic Installation
+1. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
+2. Enter "Beyond Pay" in the search form in the top right of the screen.
+3. Select *Beyond Pay for WooCommerce* from the search results.
+4. Click the **Install Now** button to install the plugin.
+5. Click **Activate** to activate the plugin.
+
+### Manual Installation
+1. Make sure WooCommerce is [installed and enabled on your WordPress instance](https://docs.woocommerce.com/document/installing-uninstalling-woocommerce/).
+2. Download the **beyondpay-gateway.zip** from [the latest release](https://github.com/getbeyond/beyondpay_woocommerce/releases/latest).
+3. From your WordPress **/wp-admin** page, navigate to **Plugins > Add New**.
+4. Click the **Upload Plugin** button at the top of the screen.
+5. Select the **beyondpay-gateway.zip** file from your local filesystem that was obtained earlier.
+6. Click **Install Now**.
+7. When the installation is complete you will see the message "Plugin installed successfully."
+8. Click the **Activate Plugin** button at the bottom of the page.
+    - *For more information on managing WordPress plugins, see https://wordpress.org/support/article/managing-plugins/*
 
 == Frequently Asked Questions ==
 
@@ -105,7 +101,7 @@ Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https:
 
 = Does this gateway plugin support WooCommerce Subscriptions? =
 
-Not yet, but this feature is coming soon!
+Yes! Beyond Pay for WooCommerce supports recurring payments for the official [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). Subscription features include the ability for customers to store or change their cards on file, cancel/suspend/reactivate subscriptions, and modify subscription amounts and due dates.
 
 = How can I get further support? =
 

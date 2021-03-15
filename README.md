@@ -5,6 +5,7 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 - Accept Visa, MasterCard, American Express, Discover, JCB, and Diners Club brand cards directly on your website
 - No redirect to a third-party hosted payment page, reducing checkout friction and cart abandonment
 - Card data is securely captured with Beyond Pay Gateway's hosted payment fields presented via inline frame (iframe) and tokenized before reaching your server
+- Recurring billing integration with the [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). Beyond Pay for WooCommerce subscription features include the ability for customers to store or change their cards on file, cancel/suspend/reactivate subscriptions, and modify subscription amounts and due dates.
 - Simplifies merchant PCI compliance obligations to the shorter [Self-Assessment Questionnaire "A" (SAQ-A)](https://www.pcisecuritystandards.org/pci_security/completing_self_assessment)
 - Support either pre-authorization and later capture when WooCommerce order status changes, or authorization and capture at once (the combined "sale" transaction type)
 - Optimize B2B card acceptance costs by automatically sending additional transaction data elements (also known as ["Level II" and "Level III" information](https://www.getbeyond.com/b2b-payments/)
@@ -56,6 +57,20 @@ There are 2 primary ways to install this plugin: **Automatic** or **Manual**
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
 
+## WooCommerce Subscriptions Integration
+
+Beyond Pay for WooCommerce offers automated recurring billing functionality through integration with the official [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). The Subscriptions Extension must be purchased from WooCommerce before recurring payments can be accepted with Beyond Pay for WooCommerce.
+
+Setting up your subscriptions is simple:
+
+1. Create a subscription product in the Products module of WooCommerce and define the price and terms: e.g., "$5.90 every 2nd month".
+2. As customers purchase subscription products on your store, they will be prompted to create a user account and save their payment method on file.
+3. When the payment is due, Beyond Pay for WooCommerce will automatically charge the card on file without you having to do anything.
+4. The status of each scheduled payment is reported back to your WooCommerce Subscription extension in WooCommerce, whether successful or failed.
+5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date. 
+
+All card on file data is securely tokenized by Beyond Pay and never touches your server.
+
 ## Frequently Asked Questions
 
 **Is it secure and/or compliant to accept credit cards directly on my website?**
@@ -74,7 +89,7 @@ Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https:
 
 **Does this gateway plugin support WooCommerce Subscriptions?**
 
-Not yet, but this feature is coming soon!
+Yes! Beyond Pay for WooCommerce supports recurring payments for the official [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). Subscription features include the ability for customers to store or change their cards on file, cancel/suspend/reactivate subscriptions, and modify subscription amounts and due dates.
 
 **How can I get further support?**
 
