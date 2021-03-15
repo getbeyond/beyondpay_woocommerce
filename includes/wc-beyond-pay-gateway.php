@@ -212,7 +212,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $this->saved_payment_methods();
 	}
 
-	$form_event = isset($_GET['change_payment_method']) || is_add_payment_method_page() ? 'submit' : 'checkout_place_order';
 	?>
 	<fieldset id="wc-beyond_pay-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">
 
@@ -230,9 +229,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
 	    <div class="clear"></div>
 	</fieldset>
-	<script type="text/javascript">
-	    attachBeyondPay('<?php echo $this->public_key ?>','<?php echo $form_event ?>', <?php echo $this->testmode ? 'true' : 'false' ?>);
-	</script>
 	<?php
 	if ( is_checkout() && !isset($_GET['change_payment_method'])) {
 	    if($this->cart_has_subscription()){
@@ -262,11 +258,14 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 
 	// and this is our custom JS in your plugin directory that works with TokenPay.js
-	wp_register_script('woocommerce_beyondpay', plugins_url('assets/js/beyondpay.js', dirname(__FILE__)));
 	wp_register_script('woocommerce_tokenpay', plugins_url('assets/js/tokenpay.js', dirname(__FILE__)));
+	wp_register_script('woocommerce_beyondpay', plugins_url('assets/js/beyondpay.js', dirname(__FILE__)),['woocommerce_tokenpay']);
 
-	wp_enqueue_script('woocommerce_beyondpay');
 	wp_enqueue_script('woocommerce_tokenpay');
+	wp_enqueue_script('woocommerce_beyondpay');
+	
+	$form_event = isset($_GET['change_payment_method']) || is_add_payment_method_page() ? 'submit' : 'checkout_place_order';
+	wp_add_inline_script('woocommerce_beyondpay', "bindBeyondPay('$this->public_key', '$form_event', ".( $this->testmode ? 'true' : 'false' ).")");
     }
 
     public function validate_fields() {

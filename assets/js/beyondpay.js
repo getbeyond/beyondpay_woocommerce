@@ -1,3 +1,12 @@
+function bindBeyondPay(publicKey, formEventType, isTestMode){
+  jQuery(function() {
+    attachBeyondPay(publicKey, formEventType, isTestMode);
+    jQuery( document.body ).on( 'updated_checkout' ,(e)=> {
+      attachBeyondPay(publicKey, formEventType, isTestMode);
+    });
+  })
+}
+
 /**
  * Initializes and attaches the TokenPay iframe.
  * @param {string} publicKey

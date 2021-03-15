@@ -119,6 +119,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
+= 1.4.2 =
+* Remove inline scripts on payment fields.
+
 = 1.4.1 =
 * Payment methods management support added
 
