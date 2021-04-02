@@ -39,6 +39,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->custom_error_message = $this->get_option('custom_error_message');
 	$this->enabled = $this->get_option('enabled');
 	$this->testmode = 'yes' === $this->get_option('testmode');
+	$this->debug_mode = 'yes' === $this->get_option('debug_mode');
+	
 	$this->api_url = $this->testmode ?
 		"https://api-test.getbeyondpay.com/paymentservice/requesthandler.svc" :
 		"https://api.getbeyondpay.com/PaymentService/RequestHandler.svc";
@@ -192,6 +194,13 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'description' => 'You can set the CSS rules here which will '
 		. 'apply to the payment fields.',
 		'default' => file_get_contents(dirname(__DIR__) . '/assets/css/payment-styling.css')
+	    ),
+	    'debug_mode' => array(
+		'title' => 'Debug mode',
+		'label' => 'Enable Debug Mode',
+		'type' => 'checkbox',
+		'description' => 'Save payment request contents on the order details when a payment request fails. Should only be turned on when tracking payment processing issues.',
+		'default' => 'no'
 	    ),
 	);
     }
@@ -443,11 +452,35 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'redirect' => $this->get_return_url($order)
 	    );
 	} else {
+	    $this-> add_debug_note($order, $request, $response);
 	    $errorMsg = $this->custom_error_message ?
 		    $this->custom_error_message :
 		    'Something went wrong: %S. Please try again.';
 	    wc_add_notice(str_replace('%S', $response->ResponseDescription, $errorMsg), 'error');
 	    return;
+	}
+    }
+    
+    /**
+     * Adds a debug message to the order if debug mode is turned on.
+     * @param BeyondPay\BeyondPayResponse $response
+     * @param WC_Order $order
+     * @param BeyondPay\BeyondPayRequest $request
+     * @param BeyondPay\BeyondPayResponse $response
+     */
+    private function add_debug_note($order, $request, $response){
+	if($this->debug_mode) {
+	    $order->add_order_note(
+		'Failed to process payment for request: <br/>' .
+		'<div style="background-color: white; overflow: auto; max-height: 100px;">' .
+		    htmlentities(BeyondPay\BeyondPayConnection::Serialize($request)) .
+		'</div><br/>'.
+		'Response was:<br/>'.
+		'<div style="background-color: white; overflow: auto; max-height: 100px;">' .
+		    htmlentities(BeyondPay\BeyondPayConnection::Serialize($response)) .
+		'</div><br/>'.
+		'<br/>You are seeing this notice because you have debug mode turned on in Beyond Pay Gateway settings.'
+	    );
 	}
     }
 
@@ -649,6 +682,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    $order->save_meta_data();
 		    $subscription->payment_complete();
 		} else {
+		    $this-> add_debug_note($order, $request, $response);
 		    $order->add_order_note(
 			'Subscription payment was not processed, due to: ' . 
 			$response->ResponseDescription. 

@@ -9,6 +9,7 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
 - Simplifies merchant PCI compliance obligations to the shorter [Self-Assessment Questionnaire "A" (SAQ-A)](https://www.pcisecuritystandards.org/pci_security/completing_self_assessment)
 - Support either pre-authorization and later capture when WooCommerce order status changes, or authorization and capture at once (the combined "sale" transaction type)
 - Optimize B2B card acceptance costs by automatically sending additional transaction data elements (also known as ["Level II" and "Level III" information](https://www.getbeyond.com/b2b-payments/)
+- Issue refunds directly from the Order Details screen
 - Custom CSS styling support for the hosted payment fields so that you can create your ideal checkout experience
 - Customizable gateway response and error messaging
 - Test/sandbox mode for development and staging
@@ -91,6 +92,10 @@ Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https:
 
 Yes! Beyond Pay for WooCommerce supports recurring payments for the official [WooCommerce Subscriptions Extension](https://woocommerce.com/products/woocommerce-subscriptions/). Subscription features include the ability for customers to store or change their cards on file, cancel/suspend/reactivate subscriptions, and modify subscription amounts and due dates.
 
+**How can I refund a transaction?**
+
+From your WordPress **/wp-admin** page, navigate to **Orders**, select the order you would like to refund, and press the button that says **Refund $X.XX via Beyond Pay Gateway**. You will be prompted to confirm the action, as the refund cannot be undone.
+
 **How can I get further support?**
 
 Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbeyond.com), [submit a support ticket via WordPress](https://wordpress.org/support/plugin/beyond-pay-for-woocommerce/), or [submit an issue via GitHub](https://github.com/getbeyond/beyondpay_woocommerce/issues). For basic support and troubleshooting of your credit card authorizations and sales, you may also contact our Service Center at 1-888-480-1571.
@@ -128,11 +133,14 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.4.2
+* Debug mode support added.
+
 ### 1.4.1
-* Payment methods management support added
+* Payment methods management support added.
 
 ### 1.4.0
-* Subscription support added
+* Subscription and refund support added.
 
 ### 1.3.4
 * Differentiate test and prod TokenPay URLs.
