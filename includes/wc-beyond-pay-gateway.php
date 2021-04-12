@@ -39,7 +39,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->custom_error_message = $this->get_option('custom_error_message');
 	$this->enabled = $this->get_option('enabled');
 	$this->testmode = 'yes' === $this->get_option('testmode');
-	$this->debug_mode = 'yes' === $this->get_option('debug_mode');
+	$this->debug_valid_requests = 'all' === $this->get_option('debug_mode');
+	$this->debug_mode = $this->debug_valid_requests || 'fail_only' === $this->get_option('debug_mode');
 	
 	$this->api_url = $this->testmode ?
 		"https://api-test.getbeyondpay.com/paymentservice/requesthandler.svc" :
@@ -196,12 +197,17 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'default' => file_get_contents(dirname(__DIR__) . '/assets/css/payment-styling.css')
 	    ),
 	    'debug_mode' => array(
-		'title' => 'Debug mode',
-		'label' => 'Enable Debug Mode',
-		'type' => 'checkbox',
-		'description' => 'Save payment request contents on the order details when a payment request fails. Should only be turned on when tracking payment processing issues.',
+		'title' => 'Verbose Logging',
+		'label' => 'Enable Verbose Logging',
+		'type' => 'select',
+		'options' => [
+		    'no' => 'Off',
+		    'fail_only' => 'Enabled for failed requests',
+		    'all' => 'Enabled for all requests'
+		],
+		'description' => 'Log details from payment gateway API requests and responses on the order details page. All card data is securely tokenized and never stored or logged. Should be enabled only for troubleshooting or development.',
 		'default' => 'no'
-	    ),
+	    )
 	);
     }
 
@@ -417,6 +423,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	
 	$conn = new BeyondPay\BeyondPayConnection();
 	$response = $conn->processRequest($this->api_url, $request);
+	$this->verbose_logging($order, $request, $response);
 
 	if ($response->ResponseCode == '00000') {
 	    
@@ -452,7 +459,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'redirect' => $this->get_return_url($order)
 	    );
 	} else {
-	    $this-> add_debug_note($order, $request, $response);
 	    $errorMsg = $this->custom_error_message ?
 		    $this->custom_error_message :
 		    'Something went wrong: %S. Please try again.';
@@ -468,10 +474,23 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
      * @param BeyondPay\BeyondPayRequest $request
      * @param BeyondPay\BeyondPayResponse $response
      */
-    private function add_debug_note($order, $request, $response){
+    private function verbose_logging($order, $request, $response){
 	if($this->debug_mode) {
+	    $is_successfull = $response->ResponseCode == '00000';
+	    if($is_successfull && !$this->debug_valid_requests){
+		return;
+	    }
+	    if(!empty($request->PrivateKey)){
+		$request->PrivateKey = '--hidden--';
+	    }
+	    if(!empty($request->Password)){
+		$request->Password = '--hidden--';
+	    }
+	    $order_note_header = $is_successfull ? 
+		'Processed payment request' :
+		'Failed to process payment for request';
 	    $order->add_order_note(
-		'Failed to process payment for request: <br/>' .
+		$order_note_header.': <br/>' .
 		'<div style="background-color: white; overflow: auto; max-height: 100px;">' .
 		    htmlentities(BeyondPay\BeyondPayConnection::Serialize($request)) .
 		'</div><br/>'.
@@ -479,7 +498,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'<div style="background-color: white; overflow: auto; max-height: 100px;">' .
 		    htmlentities(BeyondPay\BeyondPayConnection::Serialize($response)) .
 		'</div><br/>'.
-		'<br/>You are seeing this notice because you have debug mode turned on in Beyond Pay Gateway settings.'
+		'<br/>You are seeing this notice because you have Verbose Logging enabled in Beyond Pay Gateway settings.'
 	    );
 	}
     }
@@ -668,6 +687,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
 		$conn = new BeyondPay\BeyondPayConnection();
 		$response = $conn->processRequest($this->api_url, $request);
+		$this->verbose_logging($order, $request, $response);
 
 		if ($response->ResponseCode == '00000') {
 		    if ($request->requestMessage->TransactionType === "sale-auth") {
@@ -682,7 +702,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    $order->save_meta_data();
 		    $subscription->payment_complete();
 		} else {
-		    $this-> add_debug_note($order, $request, $response);
 		    $order->add_order_note(
 			'Subscription payment was not processed, due to: ' . 
 			$response->ResponseDescription. 

@@ -54,6 +54,7 @@ There are 2 primary ways to install this plugin: **Automatic** or **Manual**
     - Learn more about best practices for authorization and capture/settlement from the [Visa E-Commerce Risk Management Best Practices document](https://usa.visa.com/dam/VCOM/download/merchants/visa-risk-management-guide-ecommerce.pdf)
   - **Level II/III Data** - controls which extended data elements are automatically sent with transaction requests in order to [optimize interchange rates on B2B cards](https://www.getbeyond.com/b2b-payments/); Level II includes reference number and tax amount, while Level III includes line-item details. Set to Level III to ensure you always qualify for the best rates on eligible corporate purchasing cards. (Tax-exempt transactions are not eligible for Level II interchange rates but may be eligibile for Level III.)
   - **Advanced Styling** - allows for customized styling of the Beyond Pay card collection iframe via CSS
+  - **Verbose Logging** - enable for troubleshooting or development in order to log the gateway request and response messages on the Order Detail page; sensitive authentication details are not logged nor is any card data ever stored
 5. Click the **Save Changes** button once you have completed configuration; the page will refresh and a message reading "Your settings have been saved" will display at the top.
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
@@ -134,7 +135,7 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 ## Changelog
 
 ### 1.4.2
-* Debug mode support added.
+* Verbose logging mode support added.
 
 ### 1.4.1
 * Payment methods management support added.
