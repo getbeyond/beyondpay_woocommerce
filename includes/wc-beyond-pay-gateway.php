@@ -2,9 +2,6 @@
 
 class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
-    /**
-     * Class constructor, more about it in Step 3
-     */
     public function __construct() {
 
 	$this->id = 'beyondpay';
@@ -57,7 +54,10 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->password = $this->testmode ?
 		$this->get_option('test_password') :
 		$this->get_option('password');
-	$this->transaction_mode = $this->get_option('transaction_mode') == "sale" ? "sale" : "sale-auth";
+	$this->transaction_mode = 
+	    $this->get_option('transaction_mode') == "sale" ? "sale" : 
+	    $this->get_option('transaction_mode') == "authorization" ? "sale-auth" :
+	    'tokenize_only';
 	$this->merchant_code = $this->get_option('merchant_code');
 	$this->merchant_account_code = $this->get_option('merchant_account_code');
 
@@ -160,11 +160,15 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		'type' => 'select',
 		'options' => [
 		    'sale' => 'Sale',
-		    'authorization' => 'Authorization'
+		    'authorization' => 'Authorization',
+		    'tokenize_only' => 'Save Card ONLY'
 		],
-		'description' => 'Sale mode will capture the payment instantly, '
-		. 'authorization will only authorize when order is placed and capture'
-		. ' once order status changes to completed.',
+		'description' =>
+		    '<ul>'
+			. '<li>Sale mode will capture the payment instantly;</li> '
+			. '<li>Authorization will only authorize when order is placed and capture once order status changes to completed;</li>'
+			. '<li>Save Card ONLY allows you to securely store card numbers without any initial authorization and then later charge the card from the Order Details page. NOTE: You must select “Process Payment” on the Order Details page in order to get paid in Tokenize Only mode.</li>'
+		    . '</ul>',
 	    ),
 	    'additional_data' => array(
 		'title' => 'Level II/III Data',
@@ -252,6 +256,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	if ( is_checkout() && !isset($_GET['change_payment_method'])) {
 	    if($this->cart_has_subscription()){
 		echo "<p>Your payment method will be saved to process subscription payments.</p>";
+	    } else if($this->transaction_mode == 'tokenize_only') {
+		echo "<p>Your payment method will be securely saved and charged when your order is completed.</p>";
 	    } else {
 		$this->save_payment_method_checkbox();
 	    }
@@ -306,19 +312,32 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	return true;
     }
+    /**
+     * @param WC_Order $order
+     * @return boolean
+     */
+    public function can_refund_order( $order ) {
+	return $order && !empty($order->get_transaction_id()) && empty($order->get_meta('_beyond_pay_tokenized'));
+    }
     
     public function process_refund($order_id, $amount = null, $reason = '') {
 	$order = wc_get_order($order_id);
+	if($order->get_meta('_beyond_pay_tokenized')){
+	    $order->add_order_note("Order refund failed: this order was processed with 'Save Card ONLY' transaction mode and the payment was not processed, no refund should be needed.");
+	    return false;
+	}
 	$request = $this->build_payment_request(
 	    'refund',
 	    $amount,
 	    $order->get_transaction_id(),
 	    null
 	);
-	$conn = new BeyondPay\BeyondPayConnection();
-	$response = $conn->processRequest($this->api_url, $request);
+	$response = $this->send_gateway_request($request, $order);
 
 	if ($response->ResponseCode == '00000') {
+	    if($reason){
+		$order->add_order_note("Order refunded, reason: $reason");
+	    }
 	    return true;
 	} else {
 	    $order->add_order_note("Error refunding order: $response->ResponseDescription");
@@ -334,7 +353,10 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$pay_with_token = !empty($_POST['wc-beyondpay-payment-token']) && is_numeric($_POST['wc-beyondpay-payment-token']) ?
 	    intval($_POST['wc-beyondpay-payment-token']) :
 	    false;
-	$save_token = !empty($_POST['wc-beyondpay-new-payment-method']) && $_POST['wc-beyondpay-new-payment-method'] === 'true';
+	$is_tokenize_only = $this->transaction_mode === "tokenize_only";
+	$save_token = 
+	    $is_tokenize_only || 
+	    (!empty($_POST['wc-beyondpay-new-payment-method']) && $_POST['wc-beyondpay-new-payment-method'] === 'true');
 	$change_payment_for_order = !empty($_POST['woocommerce_change_payment']) ?
 	    intval($_POST['woocommerce_change_payment']) :
 	    false;
@@ -350,8 +372,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    sanitize_key($_POST['beyond_pay_token'])
 		);
 
-		$conn = new BeyondPay\BeyondPayConnection();
-		$response = $conn->processRequest($this->api_url, $request);
+		$response = $this->send_gateway_request($request);
 
 		if ($response->ResponseCode == '00000') {
 		    // Not passing order - don't want to add this token to order, but update_payment_token_ids().
@@ -376,12 +397,24 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	
 	if($pay_with_token){
+	    /** @var WC_Payment_Token - stored token */
 	    $token = $this->get_token($pay_with_token);
+	    if($is_tokenize_only) {
+		$order->add_payment_token($token);
+		return $this->tokenize_only_order($order);
+	    }
 	    $request = $this->build_payment_request(
 		'token_payment',
 		$order->get_total(),
 		$order->get_transaction_id(),
 		$token
+	    );
+	} else if($is_tokenize_only){
+	    $request = $this->build_payment_request(
+		'save_payment_method',
+		null,
+		null,
+		sanitize_key($_POST['beyond_pay_token'])
 	    );
 	} else {
 	    $request = $this->build_payment_request(
@@ -392,27 +425,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    );
 	}
 
-	$address = $order->get_address('billing');
-	if (!empty($address)) {
-	    $name = trim($address['first_name'] . ' ' . $address['last_name']);
-	    $request->requestMessage->AccountHolderName = $name;
-	    $request->requestMessage->AccountStreet = trim($address['address_1']);
-	    if (!empty($address['phone'])) {
-		$address['phone'] = str_replace([' ', '-', '#', '+'], '', $address['phone']);
-		while (strlen($address['phone']) < 10) {
-		    $address['phone'] = '0' . $address['phone'];
-		}
-		if (strlen($address['phone']) < 12) {
-		    $request->requestMessage->AccountPhone = trim($address['phone']);
-		}
-	    }
-	    if (!empty($address['postcode'])) {
-		$postcode = str_replace('-', '', $address['postcode']);
-		if (is_numeric($postcode) && strlen($postcode) === 5) {
-		    $request->requestMessage->AccountZip = $postcode;
-		}
-	    }
-	}
+	$this->fill_address_data($request, $order);
 
 	$customer_id = $order->get_user_id();
 	if (!empty($customer_id)) {
@@ -420,10 +433,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	$request->requestMessage->InvoiceNum = $order_id;
 	$this->fill_level_2_3_data($request, $order);
-	
-	$conn = new BeyondPay\BeyondPayConnection();
-	$response = $conn->processRequest($this->api_url, $request);
-	$this->verbose_logging($order, $request, $response);
+	$response = $this->send_gateway_request($request, $order);
 
 	if ($response->ResponseCode == '00000') {
 	    
@@ -431,16 +441,16 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$this->has_subscription($order) ||
 		$save_token
 	    ) {
-		$this->save_token_from_response(
+		$token = $this->save_token_from_response(
 		    $response,
 		    $save_token || $this->connect_subscription_payments_with_users ? $order->get_user_id() : null,
 		    $order
 		);
-	    } elseif ($pay_with_token) {
-		if (!empty($response->responseMessage->CardType) && $token->get_card_type() === 'Card'){
-		    $token->set_card_type($response->responseMessage->CardType);
-		    $token->save();
+		if($is_tokenize_only) {
+		    return $this->tokenize_only_order($order, $token);
 		}
+	    } elseif ($pay_with_token) {
+		$this->update_card_type_on_token($response, $token);
 		$order->add_payment_token($token);
 	    }
 
@@ -474,7 +484,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
      * @param BeyondPay\BeyondPayRequest $request
      * @param BeyondPay\BeyondPayResponse $response
      */
-    private function verbose_logging($order, $request, $response){
+    private function verbose_logging($order, $request, $response) {
 	if($this->debug_mode) {
 	    $is_successfull = $response->ResponseCode == '00000';
 	    if($is_successfull && !$this->debug_valid_requests){
@@ -528,9 +538,8 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$token->set_user_id($user_id);
 	    }
 	    $token->save();
-	} elseif (!empty($response->responseMessage->CardType) && $token->get_card_type()==='Card'){
-	    $token->set_card_type($response->responseMessage->CardType);
-	    $token->save();
+	} else {
+	    $this->update_card_type_on_token($response, $token);
 	}
 	
 	if(!empty($order)){
@@ -538,6 +547,18 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	}
 	
 	return $token;
+    }
+    
+    /**
+     * Updates the card type if token has it missing and more accurate value is provided in response.
+     * @param BeyondPay\BeyondPayResponse $response
+     * @param WC_Payment_Token $token
+     */
+    private function update_card_type_on_token($response, $token) {
+	if (!empty($response->responseMessage->CardType) && ($token->get_card_type() === 'Card' || empty($token->get_card_type()))) {
+	    $token->set_card_type($response->responseMessage->CardType);
+	    $token->save();
+	}
     }
     
     /**
@@ -635,6 +656,35 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $request->requestMessage->Item = $itemsParsed;
 	}
     }
+    
+    /**
+     * Update request with address data if available on order.
+     * @param BeyondPay\BeyondPayRequest $request The request to update
+     * @param WC_Order $order Order to fetch data from
+     */
+    private function fill_address_data($request, $order){
+	$address = $order->get_address('billing');
+	if (!empty($address)) {
+	    $name = trim($address['first_name'] . ' ' . $address['last_name']);
+	    $request->requestMessage->AccountHolderName = $name;
+	    $request->requestMessage->AccountStreet = trim($address['address_1']);
+	    if (!empty($address['phone'])) {
+		$address['phone'] = str_replace([' ', '-', '#', '+'], '', $address['phone']);
+		while (strlen($address['phone']) < 10) {
+		    $address['phone'] = '0' . $address['phone'];
+		}
+		if (strlen($address['phone']) < 12) {
+		    $request->requestMessage->AccountPhone = trim($address['phone']);
+		}
+	    }
+	    if (!empty($address['postcode'])) {
+		$postcode = str_replace('-', '', $address['postcode']);
+		if (is_numeric($postcode) && strlen($postcode) === 5) {
+		    $request->requestMessage->AccountZip = $postcode;
+		}
+	    }
+	}
+    }
 
 
     /**
@@ -670,7 +720,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$subscription->payment_failed();
 		continue;
 	    } else {
-		try{
+		try {
 		    $token = new WC_Payment_Token_CC($tokens[0]);
 		} catch(exception $e) {
 		    $order->add_order_note('Missing valid payment method to process subscription.');
@@ -684,10 +734,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    $token
 		);
 		$this->fill_level_2_3_data($request, $order);
-
-		$conn = new BeyondPay\BeyondPayConnection();
-		$response = $conn->processRequest($this->api_url, $request);
-		$this->verbose_logging($order, $request, $response);
+		$response = $this->send_gateway_request($request, $order);
 
 		if ($response->ResponseCode == '00000') {
 		    if ($request->requestMessage->TransactionType === "sale-auth") {
@@ -719,9 +766,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
      */
     public function capture_authorised_payment($order){
 	$request = $this->build_payment_request('capture', $order->get_total(), $order->get_transaction_id());
-
-	$conn = new BeyondPay\BeyondPayConnection();
-	$response = $conn->processRequest($this->api_url, $request);
+	$response = $this->send_gateway_request($request, $order);
 	if ($response->ResponseCode == '00000') {
 	    $order->update_meta_data('_beyond_pay_processed', 1);
 	    $order->save_meta_data();
@@ -744,6 +789,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
      * @return BeyondPay\BeyondPayRequest
      */
     public function build_payment_request($payment_type, $amount_to_charge = null, $reference_number = null, $token = null){
+	$transaction_type = $this->transaction_mode === 'tokenize_only' ? 'sale' : $this->transaction_mode;
 	$configs = array(
 	    'capture' => array(
 		'request_type' => '019',
@@ -753,7 +799,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    'payment' => array(
 		'request_type' => '004',
 		'auth_with_token' => true,
-		'transaction_type' => $this->transaction_mode
+		'transaction_type' => $transaction_type
 	    ),
 	    'save_payment_method' => array(
 		'request_type' => '001',
@@ -768,7 +814,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    'token_payment' => array(
 		'request_type' => '004',
 		'auth_with_token' => false,
-		'transaction_type' => $this->transaction_mode
+		'transaction_type' => $transaction_type
 	    ),
 	    'refund' => array(
 		'request_type' => '012',
@@ -815,14 +861,27 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $request->requestMessage->ReferenceNumber = $reference_number;
 	}
 	$request->requestMessage->SoftwareVendor = 'WooCommerce Beyond Pay Plugin';
-	file_put_contents('beyond.log','Transaction type: '.$config['transaction_type']."\n", FILE_APPEND);
 	if($config['transaction_type']){
 	    $request->requestMessage->TransactionType = $config['transaction_type'];
 	}
 	
 	$request->requestMessage->TransIndustryType = "EC";
-	file_put_contents('beyond.log','Transaction type2: '.$config['transaction_type']."\n", FILE_APPEND);
 	return $request;
+    }
+    
+    /**
+     * 
+     * @param BeyondPay\BeyondPayRequest $request
+     * @param WC_Order $order Optional, if not provided Debug Logging will not be performed for this request.
+     * @return BeyondPay\BeyondPayResponse
+     */
+    public function send_gateway_request($request, $order = null){
+	$conn = new BeyondPay\BeyondPayConnection();
+	$response = $conn->processRequest($this->api_url, $request);
+	if($order){
+	    $this->verbose_logging($order, $request, $response);
+	}
+	return $response;
     }
     
     /**
@@ -843,8 +902,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    sanitize_key($_POST['beyond_pay_token'])
 	);
 	
-	$conn = new BeyondPay\BeyondPayConnection();
-	$response = $conn->processRequest($this->api_url, $request);
+	$response = $this->send_gateway_request($request);
 
 	if ($response->ResponseCode == '00000') {
 	    $this->save_token_from_response($response, get_current_user_id());
@@ -883,6 +941,85 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    );
 
 	   return apply_filters('woocommerce_payment_gateway_get_saved_payment_method_option_html', $html, $token, $this);   
+	}
+    }
+
+    /**
+     * Store the token for the "Save Card ONLY" transaction mode.
+     * @param WC_Order $order
+     */
+    public function tokenize_only_order($order) {
+	global $woocommerce;
+	
+	if(empty($order->get_payment_tokens())){
+	    return array(
+		'result' => 'failure',
+		'redirect' => $order->get_view_order_url()
+	    );
+	}
+	
+	$order->add_meta_data('_beyond_pay_tokenized', 1);
+	$order->set_status('bp-tokenized');
+	$order->payment_complete();
+	$order->save_meta_data();
+	$order->save();
+	wc_reduce_stock_levels($order);
+	$order->add_order_note('Thank you for your order!', true);
+	$woocommerce->cart->empty_cart();
+
+	return array(
+	    'result' => 'success',
+	    'redirect' => $this->get_return_url($order)
+	);
+    }
+    
+    /**
+     * The order processing after merchant presses the "Process Order" button for a saved card.
+     * @param int $order_id
+     * @return array An array with success:bool and optional message:string property.
+     */
+    public function process_tokenized_payment($order_id) {
+	$order = wc_get_order($order_id);
+	$tokens = $order->get_payment_tokens();
+	if(!empty($tokens)) {
+	    try{
+		$token = new WC_Payment_Token_CC($tokens[0]);
+	    } catch(Exception $error) {
+		$order->add_order_note('Failed to process payment, payment method connected to order no longer exists or is not valid. Internal error: '.$error->getMessage());
+		return array(
+		    'success' => false,
+		    'message' => 'Payment method connected to order no longer exists or is not valid.'
+		);
+	    }
+	    $request = $this->build_payment_request('token_payment', $order->get_total(), $order->get_transaction_id(), $token);
+	    $customer_id = $order->get_user_id();
+	    if (!empty($customer_id)) {
+		$request->requestMessage->CustomerAccountCode = $customer_id;
+	    }
+	    $request->requestMessage->InvoiceNum = $order_id;
+	    $this->fill_level_2_3_data($request, $order);
+	    $response = $this->send_gateway_request($request, $order);
+	    if ($response->ResponseCode == '00000') {
+		$this->update_card_type_on_token($response, $token);
+		$order->add_payment_token($token);
+		$order->delete_meta_data('_beyond_pay_tokenized');
+		$order->save_meta_data();
+		$order->add_order_note('Your card has been charged for order #'.$order_id, true);
+		$order->set_status('processing');
+		$order->set_transaction_id($response->responseMessage->GatewayTransID);
+		$order->save();
+		$order->payment_complete($response->responseMessage->GatewayTransID);
+		return array(
+		    'success' => true
+		);
+	    } else {
+		$reason = $response->ResponseDescription.' ('.$response->ResponseCode.')';
+		$order->add_order_note('Processing saved card has failed due to: '.$reason);
+		return array(
+		    'success' => false,
+		    'message' => $reason
+		);
+	    }
 	}
     }
 

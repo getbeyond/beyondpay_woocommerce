@@ -5,26 +5,15 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.4.2
+ * Version: 1.5.0
  * Text Domain: beyond-pay-for-woocommerce
  *
- * Tested up to: 5.7.0
- * WC tested up to: 5.1.0
+ * Tested up to: 5.7.2
+ * WC tested up to: 5.4.0
  *
  * Copyright (c) 2020 Above and Beyond Business Tools and Services for Entrepreneurs, Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * Review the LICENSE file for licensing information.
  */
 
 /** Check if the class wasn't loaded by a different plugin */
@@ -76,4 +65,71 @@ add_action('woocommerce_scheduled_subscription_payment_beyondpay', 'beyond_pay_p
 function beyond_pay_process_sub_payment( $amount_to_charge, $order ) {
     $beyond_pay_gateway = wc_get_payment_gateway_by_order($order);
     $beyond_pay_gateway->process_subscription_payment( $amount_to_charge, $order );
+}
+
+add_filter('woocommerce_register_shop_order_post_statuses', 'beyond_pay_add_saved_card_status');
+
+function beyond_pay_add_saved_card_status($statuses) {
+    $statuses['wc-bp-tokenized'] = array(
+	'label'                     => 'Saved Card',
+	'public'                    => false,
+	'exclude_from_search'       => false,
+	'show_in_admin_all_list'    => true,
+	'show_in_admin_status_list' => true,
+	'label_count'               => _n_noop('Saved Card <span class="count">(%s)</span>', 'Saved Card <span class="count">(%s)</span>', 'beyond-pay-gateway'),
+    );
+    return $statuses;
+}
+
+add_filter('wc_order_statuses', 'beyond_pay_add_saved_card_to_order_statuses');
+
+function beyond_pay_add_saved_card_to_order_statuses($order_statuses) {
+    $order_statuses['wc-bp-tokenized'] = 'Saved Card';
+    return $order_statuses;
+}
+
+
+add_filter('woocommerce_order_is_pending_statuses', 'beyond_pay_mark_saved_card_as_pending_status');
+
+function beyond_pay_mark_saved_card_as_pending_status($statuses) {
+    array_push($statuses, 'wc-bp-tokenized');
+    return $statuses;
+}
+
+add_action('woocommerce_order_actions_end', 'beyond_pay_add_process_order_button');
+
+function beyond_pay_add_process_order_button($order_id){
+    $order = wc_get_order($order_id);
+    
+    if($order->get_meta('_beyond_pay_tokenized')){ 
+	?>
+	<li class="wide">
+	    <button type="button" class="button" onclick="beyondPayProcessTokenizedOrder('<?php echo esc_url(get_edit_post_link( $order_id ) ); ?>',<?php echo $order_id ?>)">
+		Process Payment
+	    </a>
+	</li>
+    <?php }
+}
+
+add_action('wp_ajax_beyond_pay_process_tokenized_order', 'beyond_pay_handle_saved_card_processing');
+
+function beyond_pay_handle_saved_card_processing(){
+    $order_id = intval($_POST['order_id']);
+    if($order_id){
+	$beyond_pay_gateway = wc_get_payment_gateway_by_order($order_id);
+	if($beyond_pay_gateway){
+	    $result = $beyond_pay_gateway->process_tokenized_payment($order_id);
+	    die(json_encode($result));
+	}
+    }
+    die(json_encode(array(
+	'success' => false,
+	'message' => 'Unable to deterimine order.'
+    )));
+}
+
+add_action('admin_enqueue_scripts', 'beyond_pay_enqueue_woocommerce_scripts');
+
+function beyond_pay_enqueue_woocommerce_scripts(){
+   wp_enqueue_script('beyondpay_admin_order', plugins_url('assets/js/beyondpay-admin-order.js', __FILE__));
 }
