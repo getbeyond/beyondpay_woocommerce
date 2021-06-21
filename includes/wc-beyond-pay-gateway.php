@@ -167,7 +167,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    '<ul>'
 			. '<li>Sale mode will capture the payment instantly;</li> '
 			. '<li>Authorization will only authorize when order is placed and capture once order status changes to completed;</li>'
-			. '<li>Save Card ONLY allows you to securely store card numbers without any initial authorization and then later charge the card from the Order Details page. NOTE: You must select “Process Payment” on the Order Details page in order to get paid in Tokenize Only mode.</li>'
+			. '<li>Save Card ONLY allows you to securely store card numbers without any initial authorization and then later charge the card from the Order Details page. NOTE: You must select “Process Payment” on the Order Details page in order to get paid in Save Card Only mode.</li>'
 		    . '</ul>',
 	    ),
 	    'additional_data' => array(
@@ -432,7 +432,9 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	    $request->requestMessage->CustomerAccountCode = $customer_id;
 	}
 	$request->requestMessage->InvoiceNum = $order_id;
-	$this->fill_level_2_3_data($request, $order);
+	if(!$is_tokenize_only){
+	    $this->fill_level_2_3_data($request, $order);
+	}
 	$response = $this->send_gateway_request($request, $order);
 
 	if ($response->ResponseCode == '00000') {
