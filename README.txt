@@ -2,7 +2,7 @@
 Contributors: beyondpay
 Tags: credit card, payment, woocommerce, payment gateway, subscriptions, subscription payments, recurring billing
 Requires at least: 4.7
-Tested up to: 5.6
+Tested up to: 5.7.2
 Stable tag: trunk
 Requires PHP: 7.0
 License: MIT
@@ -120,6 +120,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 3. Additional configuration settings for Beyond Pay plugin
 
 == Changelog ==
+
+= 1.5.0 =
+* 'Save Card ONLY' transaction mode added.
 
 = 1.4.2 =
 * Debug mode support added.
