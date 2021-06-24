@@ -735,6 +735,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		    $order->get_transaction_id(),
 		    $token
 		);
+		$this->fill_address_data($request, $order);
 		$this->fill_level_2_3_data($request, $order);
 		$response = $this->send_gateway_request($request, $order);
 
@@ -999,6 +1000,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$request->requestMessage->CustomerAccountCode = $customer_id;
 	    }
 	    $request->requestMessage->InvoiceNum = $order_id;
+	    $this->fill_address_data($request, $order);
 	    $this->fill_level_2_3_data($request, $order);
 	    $response = $this->send_gateway_request($request, $order);
 	    if ($response->ResponseCode == '00000') {
