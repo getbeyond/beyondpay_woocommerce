@@ -121,6 +121,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
+= 1.5.1 =
+* Include Account Holder information when processing saved payments.
+
 = 1.5.0 =
 * 'Save Card ONLY' transaction mode added.
 
