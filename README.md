@@ -134,6 +134,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.5.2
+* Sale transaction mode assignment issue fixed.
+
 ### 1.5.1
 * Include Account Holder information when processing saved payments.
 

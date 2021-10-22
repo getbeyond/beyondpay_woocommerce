@@ -54,10 +54,13 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 	$this->password = $this->testmode ?
 		$this->get_option('test_password') :
 		$this->get_option('password');
-	$this->transaction_mode = 
-	    $this->get_option('transaction_mode') == "sale" ? "sale" : 
-	    $this->get_option('transaction_mode') == "authorization" ? "sale-auth" :
-	    'tokenize_only';
+	$mode_mapping = array(
+	    "sale" => "sale",
+	    "authorization" => "sale-auth",
+	    "tokenize_only" => "tokenize_only"
+	);
+	$this->transaction_mode = $mode_mapping[$this->get_option('transaction_mode')];
+	
 	$this->merchant_code = $this->get_option('merchant_code');
 	$this->merchant_account_code = $this->get_option('merchant_account_code');
 
