@@ -442,6 +442,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
 	if ($response->ResponseCode == '00000') {
 	    
+	    $this->addCreditCardMetaToOrder($response, $order);
 	    if (
 		$this->has_subscription($order) ||
 		$save_token
@@ -555,6 +556,19 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
     }
     
     /**
+     * Sets masked PAN, card type and expiry date on order based on a successful respose.
+     * @param BeyondPay\BeyondPayResponse $response
+     * @param WC_Order $order
+     */
+    private function addCreditCardMetaToOrder($response, $order){
+	$order->add_meta_data('_beyond_pay_pan', substr($response->responseMessage->Token, -4));
+	$order->add_meta_data('_beyond_expiration_date', $response->responseMessage->ExpirationDate);
+	if(!empty($response->responseMessage->CardType)){
+	    $order->add_meta_data('_beyond_pay_card_type', $response->responseMessage->CardType);
+	}
+    }
+
+    /**
      * Updates the card type if token has it missing and more accurate value is provided in response.
      * @param BeyondPay\BeyondPayResponse $response
      * @param WC_Payment_Token $token
@@ -598,7 +612,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
     /**
      * Check if the order has subscriptions (WooCommerce Subscriptions)
-     * @param type $order
+     * @param WC_Order $order
      * @return boolean
      */
     private function has_subscription($order){
@@ -608,7 +622,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 
     /**
      * Check if the cart has subscriptions (WooCommerce Subscriptions)
-     * @param type $order
      * @return boolean
      */
     private function cart_has_subscription(){
@@ -743,6 +756,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$response = $this->send_gateway_request($request, $order);
 
 		if ($response->ResponseCode == '00000') {
+		    $this->addCreditCardMetaToOrder($response, $order);
 		    if ($request->requestMessage->TransactionType === "sale-auth") {
 			$order->add_meta_data('_beyond_pay_authorized', 1);
 			$order->add_order_note('Payment was authorized and will be captured when order status is changed to complete.');
@@ -1010,6 +1024,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway {
 		$this->update_card_type_on_token($response, $token);
 		$order->add_payment_token($token);
 		$order->delete_meta_data('_beyond_pay_tokenized');
+		$this->addCreditCardMetaToOrder($response, $order);
 		$order->save_meta_data();
 		$order->add_order_note('Your card has been charged for order #'.$order_id, true);
 		$order->set_status('processing');

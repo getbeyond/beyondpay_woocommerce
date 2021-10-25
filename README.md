@@ -134,6 +134,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.5.3
+* Add credit card information on order details page (only for new orders).
+
 ### 1.5.2
 * Sale transaction mode assignment issue fixed.
 
