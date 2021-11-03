@@ -5,11 +5,11 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.5.2
+ * Version: 1.5.3
  * Text Domain: beyond-pay-for-woocommerce
  *
  * Tested up to: 5.8
- * WC tested up to: 5.4.0
+ * WC tested up to: 5.8.0
  *
  * Copyright (c) 2020 Above and Beyond Business Tools and Services for Entrepreneurs, Inc.
  *
@@ -132,4 +132,43 @@ add_action('admin_enqueue_scripts', 'beyond_pay_enqueue_woocommerce_scripts');
 
 function beyond_pay_enqueue_woocommerce_scripts(){
    wp_enqueue_script('beyondpay_admin_order', plugins_url('assets/js/beyondpay-admin-order.js', __FILE__));
+   wp_enqueue_style('beyondpay_font_awsome', 'https://beyondone-cdn-public-assets-prd.getbeyond.cloud/vendor/font-awesome/4.5.0/css/font-awesome.css');
+   wp_enqueue_style('beyondpay_admin_styling', plugins_url('assets/css/admin-styling.css', __FILE__));
+}
+
+add_action( 'woocommerce_admin_order_data_after_billing_address', 'beyond_pay_display_card_brand' );
+/**
+ * Display the card details with an icon.
+ * @param WC_Order $order
+ */
+function beyond_pay_display_card_brand($order){
+    $gateway = wc_get_payment_gateway_by_order($order);
+    if($gateway instanceof WC_Beyond_Pay_Gateway && !empty($order->get_meta('_beyond_pay_pan'))){
+	switch(str_replace(' ','-',strtolower($order->get_meta('_beyond_pay_card_type')))) {
+	     case 'visa':
+	     // case 'amazon-pay':
+	     case 'amex':
+	     // case 'apple-pay':
+	     case 'dinners-club':
+	     case 'discover':
+	     case 'jcb':
+	     case 'mastercard':
+	     case 'paypal':
+	     case 'stripe':
+	     case 'visa':
+		$icon = 'cc-'.strtolower($order->get_meta('_beyond_pay_card_type'));
+	     break;
+	     default:
+		$icon = 'credit-card';
+	}
+	$exp_date = str_replace('/', '', $order->get_meta('_beyond_expiration_date'));
+
+	?>
+	<p class="beyond-pay-cc-brand">
+	     <span class="beyond-pay-icon fa-<?php echo $icon; ?>"></span>
+	     **** **** **** <?php echo esc_html($order->get_meta('_beyond_pay_pan')); ?>
+	     Exp: <?php echo esc_html(substr($exp_date, 0, 2)).'/'.esc_html(substr($exp_date, 2)); ?>
+	</p>
+     <?php
+    }
 }
