@@ -1,8 +1,11 @@
 <?php
+
 namespace BeyondPay;
+
 use Exception, SimpleXMLElement, DateTime, Throwable;
 
-class BeyondPayRequest {
+class BeyondPayRequest
+{
 
     public $ClientIdentifier;
 
@@ -26,7 +29,8 @@ class BeyondPayRequest {
     public $requestMessage;
 }
 
-class RequestMessage {
+class RequestMessage
+{
 
     public $PaymentAccountNumber;
 
@@ -338,11 +342,13 @@ class RequestMessage {
     //</editor-fold>
 }
 
-class CustomFields {
+class CustomFields
+{
     //the names of the fields and their respective values ​​are defined by the customer
 }
 
-class Item {
+class Item
+{
     //all fields are string except some cases that we are going to specify
     public $ItemCode;
 
@@ -373,7 +379,8 @@ class Item {
     public $ItemIsCredit;
 }
 
-class ServiceFee {
+class ServiceFee
+{
     //all fields are string except some cases that we are going to specify
     public $ServiceFeeID;
 
@@ -390,21 +397,24 @@ class ServiceFee {
     public $ServicePassword;
 }
 
-class LodgingItem {
+class LodgingItem
+{
     //all fields are string except some cases that we are going to specify
     public $LodgingItemType;
 
     public $LodgingItemAmount;
 }
 
-class RentalExtraChargeItem {
+class RentalExtraChargeItem
+{
     //all fields are string except some cases that we are going to specify
     public $RentalExtraChargeItemType;
 
     public $RentalExtraChargeTypeAmount;
 }
 
-class BeyondPayResponse {
+class BeyondPayResponse
+{
     //all fields are string except some cases that we are going to specify
     public $BeyondPayResponseType;
 
@@ -420,7 +430,8 @@ class BeyondPayResponse {
     public $responseMessage;
 }
 
-class ResponseMessage {
+class ResponseMessage
+{
     //all fields are string except some cases that we are going to specify
     public $Token;
 
@@ -604,7 +615,8 @@ class ResponseMessage {
     public $ServiceFeeResult;
 }
 
-class ServiceFeeResult {
+class ServiceFeeResult
+{
     //all fields are string except some cases that we are going to specify
     public $ServiceFeeID;
 
@@ -624,10 +636,12 @@ class ServiceFeeResult {
 
     public $InternalMessage;
 }
+
 // </editor-fold>
 
 // <editor-fold defaultstate="collapsed" desc="Tools">
-class Constanst{
+class Constanst
+{
 
     const SOAP_ACTION_HEADER = "SOAPAction";
     const SOAP_ACTION_VALUE = "http://bridgepaynetsecuretx.com/requesthandler/IRequestHandler/ProcessRequest";
@@ -644,22 +658,31 @@ class Constanst{
                                 </soapenv:Envelope>';
 }
 
-class BeyondPaySDKError{
+class BeyondPaySDKError
+{
 
     private $errorCode;
     private $message;
 
-    function __construct(string $errorCode, string $message){
+    function __construct(string $errorCode, string $message)
+    {
 
         $this->errorCode = $errorCode;
         $this->message = $message;
     }
 
-    public function getErrorCode(){ return $this->errorCode; }
+    public function getErrorCode()
+    {
+        return $this->errorCode;
+    }
 
-    public function getMessage(){ return $this->message; }
+    public function getMessage()
+    {
+        return $this->message;
+    }
 
-    function __toString(){
+    function __toString()
+    {
 
         $result = "(" . $this->errorCode . "): " . $this->message;
 
@@ -667,32 +690,55 @@ class BeyondPaySDKError{
     }
 }
 
-class BeyondPaySDKException extends Exception {
+class BeyondPaySDKException extends Exception
+{
 
     //<editor-fold desc="Error Messages">
-    public static function BAD_RESPONSE() { return new BeyondPaySDKError("70000", "Bad Response."); }
-    public static function SERVER_ERROR() { return new BeyondPaySDKError("70001", "Could not connect to server."); }
-    public static function EMPTY_NULL_FIELD(String $field) {
+    public static function BAD_RESPONSE()
+    {
+        return new BeyondPaySDKError("70000", "Bad Response.");
+    }
+
+    public static function SERVER_ERROR()
+    {
+        return new BeyondPaySDKError("70001", "Could not connect to server.");
+    }
+
+    public static function EMPTY_NULL_FIELD(string $field)
+    {
 
         $message = "The " . $field . " is null or empty.";
 
         return new BeyondPaySDKError("70002", $message);
     }
-    public static function NULL_FIELD(String $field) {
+
+    public static function NULL_FIELD(string $field)
+    {
 
         $message = "The " . $field . " is null.";
 
         return new BeyondPaySDKError("70003", $message);
     }
-    public static function PROCESS_REQUEST_ERROR() { return new BeyondPaySDKError("70004", "Error processing the request."); }
-    public static function INVALID_RESPONSE_FORMAT() { return new BeyondPaySDKError("70005", "The BeyondPay response is not a valid xml format. Please check the URL and the request."); }
-    public static function INVALID_URL_FORMAT(String $url) {
+
+    public static function PROCESS_REQUEST_ERROR()
+    {
+        return new BeyondPaySDKError("70004", "Error processing the request.");
+    }
+
+    public static function INVALID_RESPONSE_FORMAT()
+    {
+        return new BeyondPaySDKError("70005", "The BeyondPay response is not a valid xml format. Please check the URL and the request.");
+    }
+
+    public static function INVALID_URL_FORMAT(string $url)
+    {
 
         $message = "(" . $url . ") is malformed.";
 
         return new BeyondPaySDKError("70006", $message);
     }
-    public static function UNSUCCESSFUL_API_RESPONSE(String $apiResponse = null)
+
+    public static function UNSUCCESSFUL_API_RESPONSE(string $apiResponse = null)
     {
         $message = "Unsuccessful response from BeyondPay.";
         if (!empty($apiResponse)) {
@@ -700,22 +746,29 @@ class BeyondPaySDKException extends Exception {
         }
         return new BeyondPaySDKError("70007", $message);
     }
+
     //</editor-fold>
 
     private $beyondPaySDKError;
 
-    function __construct(BeyondPaySDKError $beyondPaySDKError, \Throwable $previous = null) {
+    function __construct(BeyondPaySDKError $beyondPaySDKError, \Throwable $previous = null)
+    {
         parent::__construct($beyondPaySDKError->getMessage(), $beyondPaySDKError->getErrorCode(), $previous);
 
         $this->beyondPaySDKError = $beyondPaySDKError;
     }
 
-    public function getBeyondPaySDKError(){ return $this->beyondPaySDKError; }
+    public function getBeyondPaySDKError()
+    {
+        return $this->beyondPaySDKError;
+    }
 }
+
 // </editor-fold>
 
 
-class BeyondPayConnection {
+class BeyondPayConnection
+{
 
     const skipField = "BeyondPayResponseType";
 
@@ -725,7 +778,8 @@ class BeyondPayConnection {
      * @return BeyondPayResponse
      * @throws BeyondPaySDKException@
      */
-    public function processRequest(string $beyondPayURL, BeyondPayRequest $request){
+    public function processRequest(string $beyondPayURL, BeyondPayRequest $request)
+    {
 
         $response = new BeyondPayResponse();
 
@@ -811,7 +865,7 @@ class BeyondPayConnection {
 
             $response = $this->createErrorResponse($request, $errorMessage, $exc->getBeyondPaySDKError()->getErrorCode());
 
-        }catch (Throwable $exc) {
+        } catch (Throwable $exc) {
 
             $bc_error = BeyondPaySDKException::PROCESS_REQUEST_ERROR();
             $errorMessage = $bc_error->getMessage() . Constanst::ADD_MORE_DETAIL . $exc->getMessage();
@@ -822,7 +876,8 @@ class BeyondPayConnection {
         return $response;
     }
 
-    public static function DeserializeStringXMLToObject(string $stringXML, string $className){
+    public static function DeserializeStringXMLToObject(string $stringXML, string $className)
+    {
 
         $result = NULL;
 
@@ -835,14 +890,14 @@ class BeyondPayConnection {
             if (empty($className)) {
                 return;
             }
-            
-	    $nsClassName = 'BeyondPay\\'.$className;
+
+            $nsClassName = 'BeyondPay\\' . $className;
             if (!class_exists($nsClassName)) {
                 return;
             }
-            
+
             $result = new $nsClassName;
-            
+
             $xmlDoc = simplexml_load_string($stringXML);
 
             if ($result instanceof BeyondPayResponse) {
@@ -864,7 +919,8 @@ class BeyondPayConnection {
      * @param type $objectToSerialize
      * @return string
      */
-    public static function Serialize ($objectToSerialize){
+    public static function Serialize($objectToSerialize)
+    {
 
         $result = NULL;
 
@@ -892,9 +948,10 @@ class BeyondPayConnection {
         return $result;
     }
 
-    private static function SerializeObjectToXML ($objectToSerialize, SimpleXMLElement $xmlDoc){
+    private static function SerializeObjectToXML($objectToSerialize, SimpleXMLElement $xmlDoc)
+    {
 
-        foreach (get_object_vars($objectToSerialize) as $key => $value){
+        foreach (get_object_vars($objectToSerialize) as $key => $value) {
 
             if ($key == self::skipField) {
                 continue;
@@ -916,7 +973,8 @@ class BeyondPayConnection {
         }
     }
 
-    private static function SetUpRootNode($objectToSerialize){
+    private static function SetUpRootNode($objectToSerialize)
+    {
 
         $rootName;
 
@@ -939,9 +997,10 @@ class BeyondPayConnection {
         return $xmlDoc;
     }
 
-    private static function SerializeArrayToXML(array $array, SimpleXMLElement $xmlNode, $field){
+    private static function SerializeArrayToXML(array $array, SimpleXMLElement $xmlNode, $field)
+    {
 
-        foreach ($array as $key => $value){
+        foreach ($array as $key => $value) {
 
             if (is_object($value)) {
 
@@ -955,7 +1014,8 @@ class BeyondPayConnection {
         }
     }
 
-    private static function SerializeFieldToXML(string $fieldName, $value, SimpleXMLElement $xmlNode){
+    private static function SerializeFieldToXML(string $fieldName, $value, SimpleXMLElement $xmlNode)
+    {
 
         if (empty($fieldName)) {
             return;
@@ -976,16 +1036,17 @@ class BeyondPayConnection {
 
         if (is_scalar($fieldValue)) {
 
-	    $stripped = in_array($fieldName, array('User','Password')) ? 
-		$fieldValue :
-		preg_replace('/[^a-z0-9_\\- ]/i', '', $fieldValue);
+            $stripped = in_array($fieldName, array('User', 'Password')) ?
+                $fieldValue :
+                preg_replace('/[^a-z0-9_\\- ]/i', '', $fieldValue);
             $xmlNode->addChild($fieldName, $stripped);
         }
     }
 
-    private static function DeserializeXMLToObject(SimpleXMLElement $xmlToDeserialize, $object){
+    private static function DeserializeXMLToObject(SimpleXMLElement $xmlToDeserialize, $object)
+    {
 
-        foreach ($xmlToDeserialize->children() as $node){
+        foreach ($xmlToDeserialize->children() as $node) {
 
             $field = $node->getName();
 
@@ -1009,19 +1070,19 @@ class BeyondPayConnection {
                 $isList = TRUE;
             }
 
-            if ($node->count() > 0){
+            if ($node->count() > 0) {
                 //the node is an Object 
-		$nsField = 'BeyondPay\\'.$field;
+                $nsField = 'BeyondPay\\' . $field;
                 if (!class_exists($nsField)) {
                     continue;
                 }
 
                 if ($isList) {
-		    
+
                     $listElement = new $nsField;
                     $object->{$field}[] = $listElement;
                     self::DeserializeXMLToObject($node, $listElement);
-                } else{
+                } else {
                     $object->{$field} = new $nsField;
                     self::DeserializeXMLToObject($node, $object->{$field});
                 }
@@ -1039,7 +1100,8 @@ class BeyondPayConnection {
         }
     }
 
-    private function createErrorResponse(BeyondPayRequest $request, String $message, String $errorCode){
+    private function createErrorResponse(BeyondPayRequest $request, string $message, string $errorCode)
+    {
 
         $response = new BeyondPayResponse();
 
@@ -1062,9 +1124,11 @@ class BeyondPayConnection {
     }
 }
 
-class SOAPMessenger {
+class SOAPMessenger
+{
 
-    public function sendMessage(string $message_encode, string $paymentGatewayUrl){
+    public function sendMessage(string $message_encode, string $paymentGatewayUrl)
+    {
 
         $response = NULL;
 
@@ -1073,15 +1137,15 @@ class SOAPMessenger {
             $headers["content-type"] = "text/xml";
 
             $requestBody = Constanst::SOAP_REQUEST_HEADER . $message_encode . Constanst::SOAP_REQUEST_FOOTER;
-            
+
             $res = wp_remote_post(
-		$paymentGatewayUrl, 
-		[
-		    'headers' => $headers,
-		    'body' => $requestBody
-		]
-	    );
-            
+                $paymentGatewayUrl,
+                [
+                    'headers' => $headers,
+                    'body' => $requestBody
+                ]
+            );
+
             if (is_array($res) && $res['response']['code'] == 200) {
                 $responseDoc = simplexml_load_string($res['body']);
                 $bodyNode = $responseDoc->xpath('//s:Body');
@@ -1094,8 +1158,8 @@ class SOAPMessenger {
 
             } else {
 
-		$code = is_array($res) ? $res['response']['code'] : $res->get_error_code();
-		$msg = is_array($res) ? $res['body'] : $res->get_error_message();
+                $code = is_array($res) ? $res['response']['code'] : $res->get_error_code();
+                $msg = is_array($res) ? $res['body'] : $res->get_error_message();
                 $errorMessage = "The request response code is: " . $code . " and the cause is: " . $msg . ".";
                 throw new BeyondPaySDKException(BeyondPaySDKException::BAD_RESPONSE(), new Exception($errorMessage));
 
