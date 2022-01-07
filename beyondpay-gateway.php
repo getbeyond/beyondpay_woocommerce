@@ -129,7 +129,7 @@ function beyond_pay_add_process_order_button($order_id)
                     echo esc_url(get_edit_post_link($order_id)); ?>',<?php
                     echo $order_id ?>)">
                 Process Payment
-                </a>
+            </button>
         </li>
         <?php
     }
