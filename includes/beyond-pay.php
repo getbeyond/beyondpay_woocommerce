@@ -667,7 +667,7 @@ class BeyondPaySDKError
     function __construct(string $errorCode, string $message)
     {
         $this->errorCode = $errorCode;
-        $this->message   = $message;
+        $this->message = $message;
     }
 
     public function getErrorCode()
@@ -739,7 +739,7 @@ class BeyondPaySDKException extends Exception
     public static function UNSUCCESSFUL_API_RESPONSE(string $apiResponse = null)
     {
         $message = "Unsuccessful response from BeyondPay.";
-        if ( ! empty($apiResponse)) {
+        if (!empty($apiResponse)) {
             $message .= " This is the BeyondPay response: " . $apiResponse;
         }
 
@@ -802,7 +802,7 @@ class BeyondPayConnection
             // </editor-fold>
 
             // <editor-fold defaultstate="collapsed" desc="Default Values">
-            $date                     = new DateTime();
+            $date = new DateTime();
             $request->RequestDateTime = $date->format("YmdHis");
 
             $request->ClientIdentifier = Constanst::CLIENTIDENTIFIER_DEFAULT_VALUE;
@@ -828,7 +828,7 @@ class BeyondPayConnection
                 );
             }
 
-            $conn           = new SOAPMessenger();
+            $conn = new SOAPMessenger();
             $encodeResponse = $conn->sendMessage($requestEncode, $beyondPayURL);
 
             if (empty($encodeResponse)) {
@@ -857,14 +857,14 @@ class BeyondPayConnection
 
             //add the response type to the response
             $tempDoc = simplexml_load_string($responseString);
-            if ( ! empty($tempDoc)) {
-                $responeType                     = $tempDoc->getName();
+            if (!empty($tempDoc)) {
+                $responeType = $tempDoc->getName();
                 $response->BeyondPayResponseType = $responeType;
             }
         } catch (BeyondPaySDKException $exc) {
             $errorMessage = $exc->getBeyondPaySDKError()->getMessage();
 
-            if ( ! empty($exc->getPrevious())) {
+            if (!empty($exc->getPrevious())) {
                 $errorMessage .= Constanst::ADD_MORE_DETAIL . $exc->getPrevious()->getMessage();
             }
 
@@ -874,7 +874,7 @@ class BeyondPayConnection
                 $exc->getBeyondPaySDKError()->getErrorCode()
             );
         } catch (Throwable $exc) {
-            $bc_error     = BeyondPaySDKException::PROCESS_REQUEST_ERROR();
+            $bc_error = BeyondPaySDKException::PROCESS_REQUEST_ERROR();
             $errorMessage = $bc_error->getMessage() . Constanst::ADD_MORE_DETAIL . $exc->getMessage();
 
             $response = $this->createErrorResponse($request, $errorMessage, $bc_error->getErrorCode());
@@ -897,7 +897,7 @@ class BeyondPayConnection
             }
 
             $nsClassName = 'BeyondPay\\' . $className;
-            if ( ! class_exists($nsClassName)) {
+            if (!class_exists($nsClassName)) {
                 return;
             }
 
@@ -927,7 +927,7 @@ class BeyondPayConnection
         $result = null;
 
         try {
-            if ( ! is_object($objectToSerialize)) {
+            if (!is_object($objectToSerialize)) {
                 return;
             }
 
@@ -972,14 +972,14 @@ class BeyondPayConnection
 
         if ($objectToSerialize instanceof BeyondPayRequest) {
             $rootName = "requestHeader";
-        } elseif ($objectToSerialize instanceof BeyondPayResponse && ! empty($objectToSerialize->BeyondPayResponseType)) {
+        } elseif ($objectToSerialize instanceof BeyondPayResponse && !empty($objectToSerialize->BeyondPayResponseType)) {
             $rootName = $objectToSerialize->BeyondPayResponseType;
         } else {
             $rootName = get_class($objectToSerialize);
         }
 
         $mainNode = "<" . $rootName . "></" . $rootName . ">";
-        $xmlDoc   = new SimpleXMLElement($mainNode);
+        $xmlDoc = new SimpleXMLElement($mainNode);
 
         return $xmlDoc;
     }
@@ -1033,16 +1033,15 @@ class BeyondPayConnection
 
             $classVars = get_object_vars($object);
 
-            if ( ! $object instanceof CustomFields && (empty($classVars) || array_key_exists(
-                                                                                $field,
-                                                                                $classVars
-                                                                            ) === false)) {
+            if (!$object instanceof CustomFields && (empty($classVars) || array_key_exists(
+                        $field,
+                        $classVars
+                    ) === false)) {
                 continue;
             }
 
-            $siblingXpathFilter = "preceding-sibling::" . $node->getName() . " | following-sibling::" . $node->getName(
-                );
-            $siblings           = $node->xpath($siblingXpathFilter);
+            $siblingXpathFilter = "preceding-sibling::" . $node->getName() . " | following-sibling::" . $node->getName();
+            $siblings = $node->xpath($siblingXpathFilter);
 
             $isList = false;
 
@@ -1054,12 +1053,12 @@ class BeyondPayConnection
             if ($node->count() > 0) {
                 //the node is an Object 
                 $nsField = 'BeyondPay\\' . $field;
-                if ( ! class_exists($nsField)) {
+                if (!class_exists($nsField)) {
                     continue;
                 }
 
                 if ($isList) {
-                    $listElement        = new $nsField;
+                    $listElement = new $nsField;
                     $object->{$field}[] = $listElement;
                     self::DeserializeXMLToObject($node, $listElement);
                 } else {
@@ -1083,14 +1082,14 @@ class BeyondPayConnection
 
         if (empty($request)) {
             $response->TransactionID = "";
-            $response->RequestType   = "";
+            $response->RequestType = "";
         } else {
             $response->TransactionID = $request->TransactionID;
-            $response->RequestType   = $request->RequestType;
+            $response->RequestType = $request->RequestType;
         }
 
         $response->ResponseDescription = $message;
-        $response->ResponseCode        = $errorCode;
+        $response->ResponseCode = $errorCode;
 
         return $response;
     }
@@ -1105,7 +1104,7 @@ class SOAPMessenger
 
         try {
             $headers[Constanst::SOAP_ACTION_HEADER] = Constanst::SOAP_ACTION_VALUE;
-            $headers["content-type"]                = "text/xml";
+            $headers["content-type"] = "text/xml";
 
             $requestBody = Constanst::SOAP_REQUEST_HEADER . $message_encode . Constanst::SOAP_REQUEST_FOOTER;
 
@@ -1113,13 +1112,13 @@ class SOAPMessenger
                 $paymentGatewayUrl,
                 [
                     'headers' => $headers,
-                    'body'    => $requestBody
+                    'body' => $requestBody
                 ]
             );
 
             if (is_array($res) && $res['response']['code'] == 200) {
                 $responseDoc = simplexml_load_string($res['body']);
-                $bodyNode    = $responseDoc->xpath('//s:Body');
+                $bodyNode = $responseDoc->xpath('//s:Body');
 
                 if (empty($bodyNode[0]) || empty($bodyNode[0]->ProcessRequestResponse) || empty($bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult)) {
                     throw new BeyondPaySDKException(BeyondPaySDKException::UNSUCCESSFUL_API_RESPONSE($res->getBody()));
@@ -1127,8 +1126,8 @@ class SOAPMessenger
 
                 $response = $bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult;
             } else {
-                $code         = is_array($res) ? $res['response']['code'] : $res->get_error_code();
-                $msg          = is_array($res) ? $res['body'] : $res->get_error_message();
+                $code = is_array($res) ? $res['response']['code'] : $res->get_error_code();
+                $msg = is_array($res) ? $res['body'] : $res->get_error_message();
                 $errorMessage = "The request response code is: " . $code . " and the cause is: " . $msg . ".";
                 throw new BeyondPaySDKException(BeyondPaySDKException::BAD_RESPONSE(), new Exception($errorMessage));
             }

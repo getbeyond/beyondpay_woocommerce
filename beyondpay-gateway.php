@@ -17,7 +17,7 @@
  */
 
 /** Check if the class wasn't loaded by a different plugin */
-if ( ! class_exists('BeyondPay\\BeyondPayRequest')) {
+if (!class_exists('BeyondPay\\BeyondPayRequest')) {
     require(dirname(__FILE__) . '/includes/beyond-pay.php');
 }
 
@@ -44,7 +44,7 @@ function beyond_pay_order_update($order_id)
     $order = wc_get_order($order_id);
 
     if (
-        ! $order->meta_exists('_beyond_pay_processed') && // Not fully processed
+        !$order->meta_exists('_beyond_pay_processed') && // Not fully processed
         $order->meta_exists('_beyond_pay_authorized') && // but authorized
         $order->has_status('completed') // and complete.
     ) {
@@ -57,7 +57,7 @@ add_action('plugins_loaded', 'beyond_pay_init_gateway_class');
 
 function beyond_pay_init_gateway_class()
 {
-    if ( ! in_array(
+    if (!in_array(
         'woocommerce/woocommerce.php',
         apply_filters('active_plugins', get_option('active_plugins'))
     )) {
@@ -81,12 +81,12 @@ add_filter('woocommerce_register_shop_order_post_statuses', 'beyond_pay_add_save
 function beyond_pay_add_saved_card_status($statuses)
 {
     $statuses['wc-bp-tokenized'] = array(
-        'label'                     => 'Saved Card',
-        'public'                    => false,
-        'exclude_from_search'       => false,
-        'show_in_admin_all_list'    => true,
+        'label' => 'Saved Card',
+        'public' => false,
+        'exclude_from_search' => false,
+        'show_in_admin_all_list' => true,
         'show_in_admin_status_list' => true,
-        'label_count'               => _n_noop(
+        'label_count' => _n_noop(
             'Saved Card <span class="count">(%s)</span>',
             'Saved Card <span class="count">(%s)</span>',
             'beyond-pay-gateway'
@@ -176,7 +176,7 @@ add_action('woocommerce_admin_order_data_after_billing_address', 'beyond_pay_dis
 function beyond_pay_display_card_brand($order)
 {
     $gateway = wc_get_payment_gateway_by_order($order);
-    if ($gateway instanceof WC_Beyond_Pay_Gateway && ! empty($order->get_meta('_beyond_pay_pan'))) {
+    if ($gateway instanceof WC_Beyond_Pay_Gateway && !empty($order->get_meta('_beyond_pay_pan'))) {
         switch (str_replace(' ', '-', strtolower($order->get_meta('_beyond_pay_card_type')))) {
             case 'visa':
                 // case 'amazon-pay':
