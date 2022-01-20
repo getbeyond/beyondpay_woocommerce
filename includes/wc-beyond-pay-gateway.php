@@ -1,5 +1,30 @@
 <?php
 
+class Credentials
+{
+    public $UserName;
+    public $Password;
+}
+
+class PublicGetTransactionsByFilter
+{
+    public $MerchantAccountID;
+    public $Skip = 0;
+    public $Take = 3;
+    public $InvoiceNumber;
+    public $DateRangeFrom;
+    public $DateRangeTo;
+
+    public function __construct($params)
+    {
+        $this->MerchantAccountID = $params['merchant_account_id'];
+        $this->InvoiceNumber = $params['invoice_number'];
+        //$this->DateRangeFrom = (clone $params['date_created'])->sub(new DateInterval('P1D'))->format('Y-m-d');
+        //$this->DateRangeTo = (clone $params['date_created'])->add(new DateInterval('P1D'))->format('Y-m-d');
+    }
+}
+
+
 class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
 {
 
@@ -438,7 +463,6 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
                 );
 
                 $response = $this->send_gateway_request($request);
-
                 if ($response->ResponseCode == '00000') {
                     // Not passing order - don't want to add this token to order, but update_payment_token_ids().
                     $token = $this->save_token_from_response($response,
@@ -708,7 +732,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
      *
      * @return WC_Payment_Token | null
      */
-    private function get_token($token_id)
+    public function get_token($token_id)
     {
         $tokens = $this->get_tokens();
         foreach ($tokens as $t) {
@@ -1245,4 +1269,70 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
         }
     }
 
+    function update_order_payment_status($order)
+    {
+        $credentials = new Credentials();
+        $credentials->UserName = $this->login;
+        $credentials->Password = $this->password;
+
+        if ($this->testmode) {
+            $reportingApiUrl = 'https://www.bridgepaynetsecuretest.com/Bridgepay.Reporting.API/ReportingAPI.svc?wsdl';
+        } else {
+            // TODO: get prod url
+            $reportingApiUrl = 'https://www.bridgepaynetsecure.com/Bridgepay.Reporting.API/ReportingAPI.svc?wsdl';
+        }
+        $client = new SoapClient($reportingApiUrl, ["trace" => 1, "exception" => 1, 'cache_wsdl' => WSDL_CACHE_BOTH]);
+
+        $params = [
+            'merchant_account_id' => 13012001,
+            'invoice_number' => $order->id,
+            'cardholder_first_name' => $order->get_billing_first_name(),
+            'date_created' => clone $order->get_date_created(),
+        ];
+
+        $getTransactionsByFilter = new PublicGetTransactionsByFilter($params);
+        $apiResult = $client->__soapCall(
+            'PublicGetTransactionsByFilter',
+            [
+                'PublicGetTransactionsByFilter' => [
+                    'credentials' => $credentials,
+                    'filterObject' => $getTransactionsByFilter
+                ]
+            ]
+        );
+        if ($apiResult->PublicGetTransactionsByFilterResult->RecordCount == 1) {
+            $result = $apiResult->PublicGetTransactionsByFilterResult->TransactionList->TransactionRow;
+            if ($result->ResponseCode == 'A01') {
+                // TODO
+                $order->add_meta_data('_beyond_pay_pan', $result->LastFour);
+                $order->add_meta_data('_beyond_expiration_date', $result->ExpirationDate);
+                if ($result->CardBrand) {
+                    $order->add_meta_data('_beyond_pay_card_type', $result->CardBrand);
+                }
+
+                if ($result->TransactionType === "Sale-Auth") {
+                    $order->add_meta_data('_beyond_pay_authorized', 1);
+                    $order->add_order_note(
+                        'Payment was authorized and will be captured when order status is changed to complete.'
+                    );
+                } else {
+                    $order->add_meta_data('_beyond_pay_authorized', 1);
+                    $order->add_meta_data('_beyond_pay_processed', 1);
+                    $order->add_order_note('Subscription payment was processed.');
+                    $order->set_status('processing');
+                }
+                $order->set_transaction_id($result->TransactionId);
+                $order->save();
+                $order->save_meta_data();
+            } else {
+                $order->add_order_note(
+                    'Payment was not processed, due to: ' . $result->ProcessorResponse .
+                    ' (code ' . $result->ResponseCode . ')'
+                );
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 }

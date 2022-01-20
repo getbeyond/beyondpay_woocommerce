@@ -848,7 +848,7 @@ class BeyondPayConnection
             $response = self::DeserializeStringXMLToObject($responseString, "BeyondPayResponse");
 
             if (empty($response)) {
-                $errorMessage = "the reponse deserialization fail. This is the xml string: " . $responseString . ".";
+                $errorMessage = "the response deserialization fail. This is the xml string: " . $responseString . ".";
                 throw new BeyondPaySDKException(
                     BeyondPaySDKException::EMPTY_NULL_FIELD("response"),
                     new Exception($errorMessage)
@@ -879,7 +879,6 @@ class BeyondPayConnection
 
             $response = $this->createErrorResponse($request, $errorMessage, $bc_error->getErrorCode());
         }
-
         return $response;
     }
 

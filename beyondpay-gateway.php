@@ -17,6 +17,13 @@
  */
 
 /** Check if the class wasn't loaded by a different plugin */
+
+use BeyondPay\Constanst;
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+
 if (!class_exists('BeyondPay\\BeyondPayRequest')) {
     require(dirname(__FILE__) . '/includes/beyond-pay.php');
 }
@@ -54,6 +61,7 @@ function beyond_pay_order_update($order_id)
 }
 
 add_action('plugins_loaded', 'beyond_pay_init_gateway_class');
+
 
 function beyond_pay_init_gateway_class()
 {
@@ -167,7 +175,7 @@ function beyond_pay_enqueue_woocommerce_scripts()
     wp_enqueue_style('beyondpay_admin_styling', plugins_url('assets/css/admin-styling.css', __FILE__));
 }
 
-add_action('woocommerce_admin_order_data_after_billing_address', 'beyond_pay_display_card_brand');
+add_action('woocommerce_admin_order_data_after_billing_address', 'beyond_pay_display_update_payment_status_button');
 /**
  * Display the card details with an icon.
  *
@@ -205,6 +213,82 @@ function beyond_pay_display_card_brand($order)
             Exp: <?php
             echo esc_html(substr($exp_date, 0, 2)) . '/' . esc_html(substr($exp_date, 2)); ?>
         </p>
+
         <?php
     }
 }
+
+function beyond_pay_display_update_payment_status_button($order)
+{
+    if ($order->get_status() != 'pending') {
+        return;
+    }
+    ?>
+    <p>
+        <input type='hidden' name='action' value='beyond_pay_update_payment_status'>
+        <input type='hidden' name='order_id' value='<?php echo $order->id ?>'>
+        <a href="#" class="button save_order button-primary"
+           id="beyond-pay-update-payment-status-btn"
+           onclick="beyond_pay_update_payment_status()">Update Payment Status
+        </a>
+    </p>
+
+    <script>
+        function beyond_pay_update_payment_status() {
+            jQuery.post(
+                ajaxurl,
+                {
+                    // TODO
+                    //security: ajax_object.ajax_nonce,
+                    action: 'beyond_pay_update_payment_status',
+                    order_id: <?php echo $order->id ?>
+                },
+                function (response) {
+                    alert(response.message);
+                    if (response.success) {
+                        window.location.reload();
+                    }
+                },
+                'json');
+        }
+    </script>
+    <?php
+}
+
+add_action('woocommerce_after_order_details', 'beyond_pay_display_update_payment_status_button');
+
+function beyond_pay_update_payment_status()
+{
+    try {
+        if (empty($_POST['order_id'])) {
+            die();
+        }
+        $order_id = $_POST['order_id'];
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            throw new Exception("Could not find WooCommerce order");
+        }
+
+        if ($order->get_payment_method() != "beyondpay") {
+            throw new Exception("Order wasn't paid using Beyond Pay.");
+        };
+        $beyond_pay_gateway = wc_get_payment_gateway_by_order($order);
+
+        if ($order->meta_exists('_beyond_pay_authorized')) {
+            throw new Exception("Order already authorized.");
+        }
+
+        if ($beyond_pay_gateway->update_order_payment_status($order)) {
+            $message = "Payment was successful and the order status was updated.";
+        } else {
+            $message = "There were no changes to the payment status.";
+        }
+        echo json_encode(['success' => true, 'message' => $message]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => true, 'message' => 'ERROR: ' . $e->getMessage()]);
+    }
+    wp_die();
+}
+
+
+add_action('wp_ajax_beyond_pay_update_payment_status', 'beyond_pay_update_payment_status');
