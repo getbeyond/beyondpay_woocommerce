@@ -2,7 +2,7 @@
 Contributors: beyondpay
 Tags: credit card, payment, woocommerce, payment gateway, subscriptions, subscription payments, recurring billing
 Requires at least: 4.7
-Tested up to: 5.8
+Tested up to: 6.0
 Stable tag: trunk
 Requires PHP: 7.0
 License: MIT
@@ -120,6 +120,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 3. Additional configuration settings for Beyond Pay plugin
 
 == Changelog ==
+
+= 1.5.4 =
+* Tested with newest Wordpress version.
 
 = 1.5.3 =
 * Add credit card information on order details page (only for new orders).
