@@ -5,11 +5,11 @@
  * Author: Beyond
  * Author URI: https://getbeyond.com
  * Plugin URI: https://developer.getbeyond.com
- * Version: 1.5.3
+ * Version: 1.5.4
  * Text Domain: beyond-pay-for-woocommerce
  *
- * Tested up to: 5.8
- * WC tested up to: 5.8.0
+ * Tested up to: 6.0
+ * WC tested up to: 6.5.0
  *
  * Copyright (c) 2020 Above and Beyond Business Tools and Services for Entrepreneurs, Inc.
  *
