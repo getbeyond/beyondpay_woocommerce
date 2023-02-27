@@ -134,8 +134,18 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
-### 1.5.4
-* Tested with newest Wordpress version.
+### 1.7.1 
+* Improve verbose logging entry labeling.
+* Manual status check update.
+
+### 1.7.0 
+* Added automated payment status update capability, tested with WordPress 6.1.1
+
+### 1.6.1 
+* Add Wordpress Multisite support
+
+### 1.6.0 =
+* Add manual tools for updating payment status for orders, that are pending payment.
 
 ### 1.5.3
 * Add credit card information on order details page (only for new orders).
