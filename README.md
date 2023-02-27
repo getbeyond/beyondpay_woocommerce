@@ -134,6 +134,9 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
+### 1.5.4
+* Tested with newest Wordpress version.
+
 ### 1.5.3
 * Add credit card information on order details page (only for new orders).
 
