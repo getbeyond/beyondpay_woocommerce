@@ -134,7 +134,7 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
-### 1.7.0 
+### 1.7.1 
 * Improve verbose logging entry labeling.
 * Manual status check update.
 
