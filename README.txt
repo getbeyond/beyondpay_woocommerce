@@ -121,6 +121,10 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
+= 1.7.1 =
+* Improve verbose logging entry labeling.
+* Manual status check update.
+
 = 1.7.0 =
 * Added automated payment status update capability, tested with WordPress 6.1.1
 
