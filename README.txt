@@ -2,7 +2,7 @@
 Contributors: beyondpay
 Tags: credit card, payment, woocommerce, payment gateway, subscriptions, subscription payments, recurring billing
 Requires at least: 4.7
-Tested up to: 6.0
+Tested up to: 6.1.1
 Stable tag: trunk
 Requires PHP: 7.0
 License: MIT
@@ -36,7 +36,7 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
   - **Title** - this controls how this payment method is listed to the consumer during checkout; defaults to "Credit/Debit Card"
   - **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
   - **Detailed Error Messages** - controls the message returned to the consumer when there is a problem with their payment; defaults to "Something went wrong: %S. Please try again." where **%S** represents the [raw response or error message](https://developer.getbeyond.com/#gateway-result-codes) returned by the gateway
-  - **Enable Test Mode** - controls whether transactions are sent to the Test/Sandbox or the Live/Production Beyond Pay Gateway environment and which type of API keys are expected; defaults to Live    
+  - **Enable Test Mode** - controls whether transactions are sent to the Test/Sandbox or the Live/Production Beyond Pay Gateway environment and which type of API keys are expected; defaults to Live
   - **Username, Password, PublicKey, PrivateKey, MerchantCode,** and **MerchantAccountCode** - these are the credentials by which the plugin authenticates to the Beyond Pay Gateway in order to process payments; for Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/Pages/ResponsePage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1URUJXWFhEMDlDTUs3OVlROEMxOExJQzZGNSQlQCN0PWcu) while live credentials are provided by Beyond once the merchant processing account is approved
   - **Transaction Mode** - controls how authorizations and payment captures are managed
     - Set this to ***Authorization*** to perform only an authorization ("pre-auth") when an order is placed which requires the Order Status to be changed to **Completed** in order for the payment to be captured (usually when an order is shipped)
@@ -59,7 +59,7 @@ Setting up your subscriptions is simple:
 2. As customers purchase subscription products on your store, they will be prompted to create a user account and save their payment method on file.
 3. When the payment is due, Beyond Pay for WooCommerce will automatically charge the card on file without you having to do anything.
 4. The status of each scheduled payment is reported back to your WooCommerce Subscription extension in WooCommerce, whether successful or failed.
-5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date. 
+5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date.
 
 All card on file data is securely tokenized by Beyond Pay and never touches your server.
 
@@ -89,7 +89,7 @@ There are 2 primary ways to install this plugin: **Automatic** or **Manual**
 
 = Is it secure and/or compliant to accept credit cards directly on my website? =
 
-Yes! Beyond Pay Gateway secures card data by hosting the actual payment fields and presenting them in an iframe so that the fields only *appear* to be part of the WooCommerce checkout form. 
+Yes! Beyond Pay Gateway secures card data by hosting the actual payment fields and presenting them in an iframe so that the fields only *appear* to be part of the WooCommerce checkout form.
 
 Once card data is collected, then the information is further secured by *tokenization*: a process in which the sensitive card data is exchanged for a non-sensitive representation, or "token." This ensures that cardholder data is not sent from the consumer's browser to the merchant's web server, and only the surrogate token value comes into contact with the merchant's systems.
 
@@ -121,8 +121,14 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 == Changelog ==
 
-= 1.5.4 =
-* Tested with newest Wordpress version.
+= 1.7.0 =
+* Added automated payment status update capability, tested with WordPress 6.1.1
+
+= 1.6.1 =
+* Add Wordpress Multisite support.
+
+= 1.6.0 =
+* Add manual tools for updating payment status for orders, that are pending payment.
 
 = 1.5.3 =
 * Add credit card information on order details page (only for new orders).
