@@ -87,7 +87,7 @@ Yes. All submission of sensitive payment data by the Beyond Pay is made via a se
 
 **Does this gateway plugin support a sandbox or test option?**
 
-Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/Pages/ResponsePage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1URUJXWFhEMDlDTUs3OVlROEMxOExJQzZGNSQlQCN0PWcu) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
+Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/r/1EqZWCRrgc) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
 
 **Does this gateway plugin support WooCommerce Subscriptions?**
 
