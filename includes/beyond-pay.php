@@ -834,7 +834,6 @@ class BeyondPayConnection
             if (empty($encodeResponse)) {
                 throw new BeyondPaySDKException(BeyondPaySDKException::EMPTY_NULL_FIELD("encode response"));
             }
-
             $responseString = base64_decode($encodeResponse);
 
             if (empty($responseString)) {
@@ -867,7 +866,6 @@ class BeyondPayConnection
             if (!empty($exc->getPrevious())) {
                 $errorMessage .= Constanst::ADD_MORE_DETAIL . $exc->getPrevious()->getMessage();
             }
-
             $response = $this->createErrorResponse(
                 $request,
                 $errorMessage,
@@ -967,7 +965,6 @@ class BeyondPayConnection
 
     private static function SetUpRootNode($objectToSerialize)
     {
-        $rootName;
 
         if ($objectToSerialize instanceof BeyondPayRequest) {
             $rootName = "requestHeader";
@@ -1000,8 +997,6 @@ class BeyondPayConnection
         if (empty($fieldName)) {
             return;
         }
-
-        $fieldValue;
 
         if (is_object($value)) {
             $fieldValue = $value->{$fieldName};
@@ -1050,7 +1045,7 @@ class BeyondPayConnection
             }
 
             if ($node->count() > 0) {
-                //the node is an Object 
+                //the node is an Object
                 $nsField = 'BeyondPay\\' . $field;
                 if (!class_exists($nsField)) {
                     continue;
@@ -1111,16 +1106,17 @@ class SOAPMessenger
                 $paymentGatewayUrl,
                 [
                     'headers' => $headers,
-                    'body' => $requestBody
+                    'body' => $requestBody,
+					'timeout' => 15,
                 ]
             );
 
             if (is_array($res) && $res['response']['code'] == 200) {
-                $responseDoc = simplexml_load_string($res['body']);
+	            $responseDoc = simplexml_load_string($res['body']);
                 $bodyNode = $responseDoc->xpath('//s:Body');
 
                 if (empty($bodyNode[0]) || empty($bodyNode[0]->ProcessRequestResponse) || empty($bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult)) {
-                    throw new BeyondPaySDKException(BeyondPaySDKException::UNSUCCESSFUL_API_RESPONSE($res->getBody()));
+                    throw new BeyondPaySDKException(BeyondPaySDKException::UNSUCCESSFUL_API_RESPONSE($res['body']));
                 }
 
                 $response = $bodyNode[0]->ProcessRequestResponse[0]->ProcessRequestResult;

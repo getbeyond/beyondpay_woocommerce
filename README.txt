@@ -2,7 +2,7 @@
 Contributors: beyondpay
 Tags: credit card, payment, woocommerce, payment gateway, subscriptions, subscription payments, recurring billing
 Requires at least: 4.7
-Tested up to: 6.1.1
+Tested up to: 6.4.1
 Stable tag: trunk
 Requires PHP: 7.0
 License: MIT
@@ -37,7 +37,7 @@ Securely accept credit cards directly on your [WooCommerce](https://woocommerce.
   - **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
   - **Detailed Error Messages** - controls the message returned to the consumer when there is a problem with their payment; defaults to "Something went wrong: %S. Please try again." where **%S** represents the [raw response or error message](https://developer.getbeyond.com/#gateway-result-codes) returned by the gateway
   - **Enable Test Mode** - controls whether transactions are sent to the Test/Sandbox or the Live/Production Beyond Pay Gateway environment and which type of API keys are expected; defaults to Live
-  - **Username, Password, PublicKey, PrivateKey, MerchantCode,** and **MerchantAccountCode** - these are the credentials by which the plugin authenticates to the Beyond Pay Gateway in order to process payments; for Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/Pages/ResponsePage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1URUJXWFhEMDlDTUs3OVlROEMxOExJQzZGNSQlQCN0PWcu) while live credentials are provided by Beyond once the merchant processing account is approved
+  - **Username, Password, PublicKey, PrivateKey, MerchantCode,** and **MerchantAccountCode** - these are the credentials by which the plugin authenticates to the Beyond Pay Gateway in order to process payments; for Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/pages/responsepage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1UMVBQWVNYSFBBNzJEV1k4Uko5WUU2NllBSCQlQCN0PWcu) while live credentials are provided by Beyond once the merchant processing account is approved
   - **Transaction Mode** - controls how authorizations and payment captures are managed
     - Set this to ***Authorization*** to perform only an authorization ("pre-auth") when an order is placed which requires the Order Status to be changed to **Completed** in order for the payment to be captured (usually when an order is shipped)
     - Set this to ***Sale*** to authorize and capture the payment immediately (usually used for digital products)
@@ -99,7 +99,7 @@ Yes. All submission of sensitive payment data by the Beyond Pay is made via a se
 
 = Does this gateway plugin support a sandbox or test option? =
 
-Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/r/1EqZWCRrgc) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
+Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/pages/responsepage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1UMVBQWVNYSFBBNzJEV1k4Uko5WUU2NllBSCQlQCN0PWcu) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
 
 = Does this gateway plugin support WooCommerce Subscriptions? =
 
@@ -120,6 +120,10 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 3. Additional configuration settings for Beyond Pay plugin
 
 == Changelog ==
+
+= 1.7.2 =
+* Updated documentation
+* Code cleanup
 
 = 1.7.1 =
 * Improve verbose logging entry labeling.

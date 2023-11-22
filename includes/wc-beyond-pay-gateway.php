@@ -101,8 +101,12 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
             "authorization" => "sale-auth",
             "tokenize_only" => "tokenize_only",
         ];
-        $this->transaction_mode
-            = $mode_mapping[$this->get_option('transaction_mode')];
+        	$transaction_mode  = $this->get_option( 'transaction_mode' );
+		if ( array_key_exists( $transaction_mode, $mode_mapping ) ) {
+			$this->transaction_mode = $mode_mapping[ $this->get_option( 'transaction_mode' ) ];
+		} else {
+			$this->transaction_mode = "sale";
+		}
 
         $this->merchant_code = $this->get_option('merchant_code');
         $this->merchant_account_code
@@ -325,8 +329,11 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
             $this->saved_payment_methods();
         }
 
-        $form_event = isset($_GET['change_payment_method'])
-        || is_add_payment_method_page() ? 'submit' : 'checkout_place_order';
+       	if (isset($_GET['pay_for_order']) || isset($_GET['change_payment_method']) || is_add_payment_method_page()) {
+			$form_event = 'submit';
+		} else {
+			$form_event = 'checkout_place_order';
+        }
         ?>
       <fieldset id="wc-beyond_pay-cc-form"
                 class="wc-credit-card-form wc-payment-form"
@@ -645,6 +652,12 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
                 'Processed payment request'
                 :
                 'Failed to process payment for request';
+
+            $serializedResponse = BeyondPay\BeyondPayConnection::Serialize($response);
+            if (empty($serializedResponse)) {
+                $serializedResponse = json_encode($response);
+            }
+
             $order->add_order_note(
                 $order_note_header . ': <br/>' .
                 '<div style="background-color: white; overflow: auto; max-height: 100px;">'
@@ -655,7 +668,7 @@ class WC_Beyond_Pay_Gateway extends WC_Payment_Gateway
                 'Response was:<br/>' .
                 '<div style="background-color: white; overflow: auto; max-height: 100px;">'
                 .
-                htmlentities(BeyondPay\BeyondPayConnection::Serialize($response))
+                htmlentities($serializedResponse)
                 .
                 '</div><br/>' .
                 '<br/>You are seeing this notice because you have Verbose Logging enabled in Beyond Pay Gateway settings.'

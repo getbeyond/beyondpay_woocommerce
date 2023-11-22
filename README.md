@@ -42,19 +42,19 @@ There are 2 primary ways to install this plugin: **Automatic** or **Manual**
 1. Select the **Payments** tab at the top of the screen.
 1. Click the **Manage** button for the Beyond Pay Gateway payment method.
 1. Proceed to configure payment method options available on this page (see [screenshot](#beyond-pay-for-woocommerce-configuration-settings)):
-  - **Enable/Disable** - toggle to control whether this payment method is enabled or disabled
-  - **Title** - this controls how this payment method is listed to the consumer during checkout; defaults to "Credit/Debit Card"
-  - **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
-  - **Detailed Error Messages** - controls the message returned to the consumer when there is a problem with their payment; defaults to "Something went wrong: %S. Please try again." where **%S** represents the [raw response or error message](https://developer.getbeyond.com/#gateway-result-codes) returned by the gateway
-  - **Enable Test Mode** - controls whether transactions are sent to the Test/Sandbox or the Live/Production Beyond Pay Gateway environment and which type of API keys are expected; defaults to Live    
-  - **Username, Password, PublicKey, PrivateKey, MerchantCode,** and **MerchantAccountCode** - these are the credentials by which the plugin authenticates to the Beyond Pay Gateway in order to process payments; for Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/r/1EqZWCRrgc) while live credentials are provided by Beyond once the merchant processing account is approved
-  - **Transaction Mode** - controls how authorizations and payment captures are managed
+- **Enable/Disable** - toggle to control whether this payment method is enabled or disabled
+- **Title** - this controls how this payment method is listed to the consumer during checkout; defaults to "Credit/Debit Card"
+- **Description** - expanded description of this payment method when selected by consumer; defaults to "Pay with your credit or debit card."
+- **Detailed Error Messages** - controls the message returned to the consumer when there is a problem with their payment; defaults to "Something went wrong: %S. Please try again." where **%S** represents the [raw response or error message](https://developer.getbeyond.com/#gateway-result-codes) returned by the gateway
+- **Enable Test Mode** - controls whether transactions are sent to the Test/Sandbox or the Live/Production Beyond Pay Gateway environment and which type of API keys are expected; defaults to Live
+- **Username, Password, PublicKey, PrivateKey, MerchantCode,** and **MerchantAccountCode** - these are the credentials by which the plugin authenticates to the Beyond Pay Gateway in order to process payments; for Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/pages/responsepage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1UMVBQWVNYSFBBNzJEV1k4Uko5WUU2NllBSCQlQCN0PWcu) while live credentials are provided by Beyond once the merchant processing account is approved
+- **Transaction Mode** - controls how authorizations and payment captures are managed
     - Set this to ***Authorization*** to perform only an authorization ("pre-auth") when an order is placed which requires the Order Status to be changed to **Completed** in order for the payment to be captured (usually when an order is shipped)
     - Set this to ***Sale*** to authorize and capture the payment immediately (usually used for digital products)
     - Learn more about best practices for authorization and capture/settlement from the [Visa E-Commerce Risk Management Best Practices document](https://usa.visa.com/dam/VCOM/download/merchants/visa-risk-management-guide-ecommerce.pdf)
-  - **Level II/III Data** - controls which extended data elements are automatically sent with transaction requests in order to [optimize interchange rates on B2B cards](https://www.getbeyond.com/b2b-payments/); Level II includes reference number and tax amount, while Level III includes line-item details. Set to Level III to ensure you always qualify for the best rates on eligible corporate purchasing cards. (Tax-exempt transactions are not eligible for Level II interchange rates but may be eligibile for Level III.)
-  - **Advanced Styling** - allows for customized styling of the Beyond Pay card collection iframe via CSS
-  - **Verbose Logging** - enable for troubleshooting or development in order to log the gateway request and response messages on the Order Detail page; sensitive authentication details are not logged nor is any card data ever stored
+- **Level II/III Data** - controls which extended data elements are automatically sent with transaction requests in order to [optimize interchange rates on B2B cards](https://www.getbeyond.com/b2b-payments/); Level II includes reference number and tax amount, while Level III includes line-item details. Set to Level III to ensure you always qualify for the best rates on eligible corporate purchasing cards. (Tax-exempt transactions are not eligible for Level II interchange rates but may be eligibile for Level III.)
+- **Advanced Styling** - allows for customized styling of the Beyond Pay card collection iframe via CSS
+- **Verbose Logging** - enable for troubleshooting or development in order to log the gateway request and response messages on the Order Detail page; sensitive authentication details are not logged nor is any card data ever stored
 5. Click the **Save Changes** button once you have completed configuration; the page will refresh and a message reading "Your settings have been saved" will display at the top.
 
 You are now ready to accept payments through Beyond Pay Gateway on your WooCommerce store!
@@ -69,7 +69,7 @@ Setting up your subscriptions is simple:
 2. As customers purchase subscription products on your store, they will be prompted to create a user account and save their payment method on file.
 3. When the payment is due, Beyond Pay for WooCommerce will automatically charge the card on file without you having to do anything.
 4. The status of each scheduled payment is reported back to your WooCommerce Subscription extension in WooCommerce, whether successful or failed.
-5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date. 
+5. Your customers can change their payment method on the WooCommerce "my-account"  page. Here, customers can also click the "Renew Now" button and pay their subscription ahead of the due date.
 
 All card on file data is securely tokenized by Beyond Pay and never touches your server.
 
@@ -77,7 +77,7 @@ All card on file data is securely tokenized by Beyond Pay and never touches your
 
 **Is it secure and/or compliant to accept credit cards directly on my website?**
 
-Yes! Beyond Pay Gateway secures card data by hosting the actual payment fields and presenting them in an iframe so that the fields only *appear* to be part of the WooCommerce checkout form. 
+Yes! Beyond Pay Gateway secures card data by hosting the actual payment fields and presenting them in an iframe so that the fields only *appear* to be part of the WooCommerce checkout form.
 
 Once card data is collected, then the information is further secured by *tokenization*: a process in which the sensitive card data is exchanged for a non-sensitive representation, or "token." This ensures that cardholder data is not sent from the consumer's browser to the merchant's web server, and only the surrogate token value comes into contact with the merchant's systems.
 
@@ -87,7 +87,7 @@ Yes. All submission of sensitive payment data by the Beyond Pay is made via a se
 
 **Does this gateway plugin support a sandbox or test option?**
 
-Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/r/1EqZWCRrgc) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
+Yes. For Test Mode, you can [request Beyond Pay Gateway sandbox API keys](https://forms.office.com/pages/responsepage.aspx?id=Q9V6UxGq3USJSkGsz2Jk7yRG7q939HJFkFXKp4lfZo1UMVBQWVNYSFBBNzJEV1k4Uko5WUU2NllBSCQlQCN0PWcu) while production (live) API keys are provided by Beyond once the merchant processing account is approved.
 
 **Does this gateway plugin support WooCommerce Subscriptions?**
 
@@ -134,14 +134,18 @@ Contact [BeyondPayIntegrations@getbeyond.com](mailto:BeyondPayIntegrations@getbe
 
 ## Changelog
 
-### 1.7.1 
+### 1.7.2
+* Updated documentation
+* Code cleanup
+
+### 1.7.1
 * Improve verbose logging entry labeling.
 * Manual status check update.
 
-### 1.7.0 
+### 1.7.0
 * Added automated payment status update capability, tested with WordPress 6.1.1
 
-### 1.6.1 
+### 1.6.1
 * Add Wordpress Multisite support
 
 ### 1.6.0 =
